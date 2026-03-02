@@ -14,7 +14,7 @@ const addressSchema = new mongoose.Schema(
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    name: {
       type: String,
       required: true,
       trim: true,
@@ -24,10 +24,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
     },
     phone: {
       type: String,
-      required: true,
     },
     role: {
       type: String,

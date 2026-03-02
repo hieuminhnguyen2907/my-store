@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/carousel_item.dart';
-import '../widgets/carousel_card.dart';
+import '../models/product.dart';
+import '../services/product_service.dart';
+import '../widgets/home_header.dart';
+import '../widgets/category_section.dart';
+import '../widgets/feature_banner.dart';
+import '../widgets/product_card.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,82 +15,177 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late PageController _pageController;
-  int _currentPage = 0;
-
-  final List<CarouselItem> carouselItems = [
-    CarouselItem(
-      title: 'Discover something new',
-      subtitle: 'Special new arrivals just for you',
-      imagePath: 'assets/images/carousel_1.jpg',
-    ),
-    CarouselItem(
-      title: 'Update trendy outfit',
-      subtitle: 'Favorite brands and hottest trends',
-      imagePath: 'assets/images/carousel_2.jpg',
-    ),
-    CarouselItem(
-      title: 'Explore your true style',
-      subtitle: 'Relax and let us bring the style to you',
-      imagePath: 'assets/images/carousel_3.jpg',
-    ),
-  ];
+  int _selectedBottomNavIndex = 0;
+  Future<List<Product>>? _featuredProductsFuture;
+  String _selectedCategoryId = '';
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _featuredProductsFuture ??= ProductService.getFeaturedProducts();
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void _onCategorySelected(String categoryId) {
+    setState(() {
+      _selectedCategoryId = categoryId;
+    });
+  }
+
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _selectedBottomNavIndex = index;
+    });
+
+    // Navigate based on selected tab
+    switch (index) {
+      case 0:
+        // Home - stay here
+        break;
+      case 1:
+        // Search
+        Navigator.pushNamed(context, '/search');
+        break;
+      case 2:
+        // Cart
+        Navigator.pushNamed(context, '/cart');
+        break;
+      case 3:
+        // Account
+        Navigator.pushNamed(context, '/account');
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // PageView for carousel
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemCount: carouselItems.length,
-            itemBuilder: (context, index) {
-              return CarouselCard(item: carouselItems[index]);
-            },
-          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            const HomeHeader(),
 
-          // Dots indicator at bottom
-          Positioned(
-            bottom: 80,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                carouselItems.length,
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
-                  ),
+            // Main scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Section
+                    CategorySection(onCategorySelected: _onCategorySelected),
+
+                    // Feature Banner
+                    const FeatureBanner(
+                      title: 'Autumn Collection',
+                      subtitle: 'New fashion trends',
+                      year: '2022',
+                      imageUrl: 'assets/images/carousel_1.jpg',
+                    ),
+
+                    // Feature Products Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Feature Products',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // Navigate to all products
+                              Navigator.pushNamed(context, '/products');
+                            },
+                            child: Text(
+                              'Show all',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Products Grid
+                    if (_featuredProductsFuture != null)
+                      FutureBuilder<List<Product>>(
+                        future: _featuredProductsFuture!,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 400,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          }
+
+                          final products = snapshot.data ?? [];
+
+                          if (products.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text('No featured products available'),
+                            );
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.5,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 16,
+                                  ),
+                              itemCount: products.length,
+                              itemBuilder: (context, index) {
+                                return ProductCard(
+                                  product: products[index],
+                                  onTap: () {
+                                    // Navigate to product detail
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/product-detail',
+                                      arguments: products[index],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedBottomNavIndex,
+        onTabChanged: _onBottomNavTapped,
       ),
     );
   }

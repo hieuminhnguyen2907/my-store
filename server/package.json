@@ -20,8 +20,10 @@
   },
   "homepage": "https://github.com/VinHa28/big-cart#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.1.2",
     "mongoose": "^9.1.2"
   },
   "devDependencies": {

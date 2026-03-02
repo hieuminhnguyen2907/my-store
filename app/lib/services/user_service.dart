@@ -1,6 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import '../utils/api_constants.dart';
+import '../utils/storage_service.dart';
+import '../utils/exceptions.dart';
 
 class User {
   final String id;
@@ -63,6 +67,15 @@ class AuthResponse {
 }
 
 class UserService {
+  // Email validation regex
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
+  static bool _isValidEmail(String email) {
+    return _emailRegex.hasMatch(email);
+  }
+
   // Register user
   static Future<AuthResponse> register({
     required String name,
@@ -85,13 +98,32 @@ class UserService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
-        return AuthResponse.fromJson(jsonDecode(response.body));
-      } else {
+        final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
+        // Save token and user data
+        await StorageService.saveToken(authResponse.token);
+        await StorageService.saveUserData(authResponse.user.toJson());
+        return authResponse;
+      } else if (response.statusCode == 400) {
         final error = jsonDecode(response.body);
-        throw Exception(error['message'] ?? 'Registration failed');
+        throw ValidationException(error['message'] ?? 'Registration failed');
+      } else {
+        throw AppException(
+          message: 'Server error occurred during registration',
+          code: response.statusCode.toString(),
+        );
       }
+    } on ValidationException {
+      rethrow;
+    } on AppException {
+      rethrow;
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to server. Please check your internet connection.',
+      );
+    } on TimeoutException {
+      throw NetworkException('Request timeout. Please try again.');
     } catch (e) {
-      throw Exception('Error: $e');
+      throw AppException(message: 'Unexpected error: $e');
     }
   }
 
@@ -110,13 +142,32 @@ class UserService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        return AuthResponse.fromJson(jsonDecode(response.body));
-      } else {
+        final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
+        // Save token and user data
+        await StorageService.saveToken(authResponse.token);
+        await StorageService.saveUserData(authResponse.user.toJson());
+        return authResponse;
+      } else if (response.statusCode == 400) {
         final error = jsonDecode(response.body);
-        throw Exception(error['message'] ?? 'Login failed');
+        throw AuthException(error['message'] ?? 'Invalid email or password');
+      } else {
+        throw AppException(
+          message: 'Server error occurred during login',
+          code: response.statusCode.toString(),
+        );
       }
+    } on AuthException {
+      rethrow;
+    } on AppException {
+      rethrow;
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to server. Please check your internet connection.',
+      );
+    } on TimeoutException {
+      throw NetworkException('Request timeout. Please try again.');
     } catch (e) {
-      throw Exception('Error: $e');
+      throw AppException(message: 'Unexpected error: $e');
     }
   }
 
@@ -135,11 +186,25 @@ class UserService {
 
       if (response.statusCode == 200) {
         return User.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        throw AuthException('Session expired. Please login again.');
+      } else if (response.statusCode == 404) {
+        throw AppException(message: 'User not found');
       } else {
-        throw Exception('Failed to get user');
+        throw AppException(message: 'Failed to get user profile');
       }
+    } on AuthException {
+      rethrow;
+    } on AppException {
+      rethrow;
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to server. Please check your internet connection.',
+      );
+    } on TimeoutException {
+      throw NetworkException('Request timeout. Please try again.');
     } catch (e) {
-      throw Exception('Error: $e');
+      throw AppException(message: 'Unexpected error: $e');
     }
   }
 
@@ -163,11 +228,39 @@ class UserService {
 
       if (response.statusCode == 200) {
         return User.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        throw AuthException('Session expired. Please login again.');
+      } else if (response.statusCode == 404) {
+        throw AppException(message: 'User not found');
+      } else if (response.statusCode == 400) {
+        final error = jsonDecode(response.body);
+        throw ValidationException(error['message'] ?? 'Invalid data provided');
       } else {
-        throw Exception('Failed to update profile');
+        throw AppException(message: 'Failed to update profile');
       }
+    } on AuthException {
+      rethrow;
+    } on ValidationException {
+      rethrow;
+    } on AppException {
+      rethrow;
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to server. Please check your internet connection.',
+      );
+    } on TimeoutException {
+      throw NetworkException('Request timeout. Please try again.');
     } catch (e) {
-      throw Exception('Error: $e');
+      throw AppException(message: 'Unexpected error: $e');
+    }
+  }
+
+  // Logout user
+  static Future<void> logout() async {
+    try {
+      await StorageService.clearAuthData();
+    } catch (e) {
+      rethrow;
     }
   }
 }
