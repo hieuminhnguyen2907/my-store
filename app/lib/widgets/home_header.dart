@@ -6,43 +6,44 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Menu icon
-          IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: const Icon(Icons.person_outline, size: 18),
+          ),
 
-          // Logo/Title
           const Text(
-            'Gemstore',
+            'GemStore',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
             ),
           ),
 
-          // Notification icon
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.notifications_outlined),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/cart');
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Icon(Icons.shopping_bag_outlined, size: 18),
             ),
-            onPressed: () {},
           ),
         ],
       ),
