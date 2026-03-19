@@ -14,7 +14,7 @@ class WelcomeScreen extends StatelessWidget {
           ),
         ),
         child: Container(
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.3)),
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -69,12 +69,12 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushNamedAndRemoveUntil(
                       context,
-                      '/home',
+                      '/login',
                       (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.9),
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 50,
                       vertical: 14,

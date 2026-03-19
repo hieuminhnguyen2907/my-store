@@ -36,13 +36,10 @@ class _ProductCardState extends State<ProductCard> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Colors.grey.shade200,
-                  image: DecorationImage(
-                    image: NetworkImage(widget.product.imageUrl),
-                    fit: BoxFit.cover,
-                    onError: (exception, stackTrace) {
-                      // Fallback for broken images
-                    },
-                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _buildAdaptiveImage(widget.product.imageUrl),
                 ),
               ),
               // Favorite button
@@ -114,6 +111,37 @@ class _ProductCardState extends State<ProductCard> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAdaptiveImage(String source) {
+    final bool isNetwork =
+        source.startsWith('http://') || source.startsWith('https://');
+
+    if (isNetwork) {
+      return Image.network(
+        source,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 18),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      source,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: const Icon(Icons.image_not_supported_outlined, size: 18),
+        );
+      },
     );
   }
 }

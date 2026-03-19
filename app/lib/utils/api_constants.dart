@@ -1,4 +1,7 @@
-const String API_BASE_URL = 'http://192.168.0.100:5000/api';
+const String API_BASE_URL = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'http://192.168.0.100:5000/api',
+);
 
 // Endpoints
 const String PRODUCTS_ENDPOINT = '$API_BASE_URL/products';

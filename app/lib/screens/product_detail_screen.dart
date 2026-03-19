@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import '../services/cart_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -49,15 +50,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product Image
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 300,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                image: DecorationImage(
-                  image: NetworkImage(widget.product.imageUrl),
-                  fit: BoxFit.cover,
-                ),
+              child: _buildAdaptiveImage(
+                widget.product.imageUrl,
+                fit: BoxFit.cover,
               ),
             ),
 
@@ -174,11 +172,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await CartService.addToCart(
+                          widget.product,
+                          quantity: _quantity,
+                        );
+                        if (!context.mounted) return;
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Added ${_quantity} ${widget.product.name} to cart',
+                              'Added $_quantity ${widget.product.name} to cart',
+                            ),
+                            action: SnackBarAction(
+                              label: 'View Cart',
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/cart');
+                              },
                             ),
                           ),
                         );
@@ -206,6 +216,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAdaptiveImage(String source, {BoxFit fit = BoxFit.cover}) {
+    final bool isNetwork =
+        source.startsWith('http://') || source.startsWith('https://');
+
+    if (isNetwork) {
+      return Image.network(
+        source,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 28),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      source,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: const Icon(Icons.image_not_supported_outlined, size: 28),
+        );
+      },
     );
   }
 }

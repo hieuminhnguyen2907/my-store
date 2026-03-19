@@ -12,6 +12,7 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  String userName = 'User';
   String? userEmail = '';
   int _selectedBottomNavIndex = 3;
 
@@ -22,8 +23,14 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _loadUserData() async {
+    final userData = await StorageService.getUserData();
     final email = await StorageService.getUserEmail();
+    if (!mounted) return;
+
     setState(() {
+      userName = userData?['name']?.toString().trim().isNotEmpty == true
+          ? userData!['name'].toString().trim()
+          : 'User';
       userEmail = email;
     });
   }
@@ -63,14 +70,14 @@ class _AccountScreenState extends State<AccountScreen> {
             TextButton(
               onPressed: () async {
                 await StorageService.clearAuthData();
-                if (mounted) {
-                  Navigator.pop(context);
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const WelcomeScreen(),
-                    ),
-                  );
-                }
+                if (!context.mounted) return;
+
+                Navigator.pop(context);
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => const WelcomeScreen(),
+                  ),
+                );
               },
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),
@@ -110,10 +117,18 @@ class _AccountScreenState extends State<AccountScreen> {
 
                     // User Email
                     Text(
-                      userEmail ?? 'User',
+                      userName,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      userEmail ?? '-',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
                       ),
                     ),
                     const SizedBox(height: 30),

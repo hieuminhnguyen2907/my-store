@@ -8,7 +8,7 @@ class ProductService {
   static Future<List<Product>> getFeaturedProducts() async {
     try {
       final response = await http
-          .get(Uri.parse('$PRODUCTS_ENDPOINT/featured'))
+          .get(Uri.parse('$PRODUCTS_ENDPOINT?featured=true'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -30,24 +30,20 @@ class ProductService {
   }) async {
     try {
       String url = PRODUCTS_ENDPOINT;
-      List<String> params = [];
+      final params = <String, String>{};
 
       if (category != null && category != 'all') {
-        params.add('category=$category');
+        params['category'] = category;
       }
       if (search != null && search.isNotEmpty) {
-        params.add('search=$search');
+        params['search'] = search;
       }
       if (featured != null && featured) {
-        params.add('featured=true');
-      }
-
-      if (params.isNotEmpty) {
-        url += '?${params.join('&')}';
+        params['featured'] = 'true';
       }
 
       final response = await http
-          .get(Uri.parse(url))
+          .get(Uri.parse(url).replace(queryParameters: params))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -102,7 +98,11 @@ class ProductService {
   static Future<List<Product>> searchProducts(String query) async {
     try {
       final response = await http
-          .get(Uri.parse('$PRODUCTS_ENDPOINT?search=$query'))
+          .get(
+            Uri.parse(
+              PRODUCTS_ENDPOINT,
+            ).replace(queryParameters: {'search': query}),
+          )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

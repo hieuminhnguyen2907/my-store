@@ -84,6 +84,19 @@ class UserService {
     required String confirmPassword,
   }) async {
     try {
+      if (name.trim().isEmpty) {
+        throw ValidationException('Name is required');
+      }
+      if (!_isValidEmail(email.trim())) {
+        throw ValidationException('Please enter a valid email address');
+      }
+      if (password.length < 6) {
+        throw ValidationException('Password must be at least 6 characters');
+      }
+      if (password != confirmPassword) {
+        throw ValidationException('Passwords do not match');
+      }
+
       final response = await http
           .post(
             Uri.parse('$API_BASE_URL/users/register'),
@@ -133,6 +146,13 @@ class UserService {
     required String password,
   }) async {
     try {
+      if (!_isValidEmail(email.trim())) {
+        throw ValidationException('Please enter a valid email address');
+      }
+      if (password.isEmpty) {
+        throw ValidationException('Password is required');
+      }
+
       final response = await http
           .post(
             Uri.parse('$API_BASE_URL/users/login'),
@@ -157,6 +177,8 @@ class UserService {
         );
       }
     } on AuthException {
+      rethrow;
+    } on ValidationException {
       rethrow;
     } on AppException {
       rethrow;
@@ -227,7 +249,9 @@ class UserService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        return User.fromJson(jsonDecode(response.body));
+        final user = User.fromJson(jsonDecode(response.body));
+        await StorageService.saveUserData(user.toJson());
+        return user;
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw AuthException('Session expired. Please login again.');
       } else if (response.statusCode == 404) {
