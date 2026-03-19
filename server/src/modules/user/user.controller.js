@@ -4,6 +4,15 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
+const toPublicUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role,
+  addresses: user.addresses,
+});
+
 /**
  * REGISTER user
  */
@@ -56,13 +65,7 @@ export const register = async (req, res) => {
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-      },
+      user: toPublicUser(user),
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -101,13 +104,7 @@ export const login = async (req, res) => {
     res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-      },
+      user: toPublicUser(user),
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -132,14 +129,7 @@ export const getCurrentUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      addresses: user.addresses,
-    });
+    res.json(toPublicUser(user));
   } catch (error) {
     console.error("Get current user error:", error);
     res.status(500).json({ message: "Server error" });
@@ -151,8 +141,29 @@ export const getCurrentUser = async (req, res) => {
  */
 export const createUser = async (req, res) => {
   try {
-    const user = await User.create(req.body);
-    res.status(201).json(user);
+    const { name, email, password, phone, role, addresses } = req.body;
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "name, email and password are required" });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      phone,
+      role,
+      addresses,
+    });
+
+    res.status(201).json(toPublicUser(user));
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -163,8 +174,8 @@ export const createUser = async (req, res) => {
  */
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    res.json(users.map(toPublicUser));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -175,11 +186,15 @@ export const getUsers = async (req, res) => {
  */
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    if (req.userId !== req.params.id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const user = await User.findById(req.params.id).select('-password');
     if (!user)
       return res.status(404).json({ message: "User not found" });
 
-    res.json(user);
+    res.json(toPublicUser(user));
   } catch (error) {
     res.status(400).json({ message: "Invalid ID" });
   }
@@ -190,14 +205,28 @@ export const getUserById = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
   try {
+    if (req.userId !== req.params.id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
     const user = await User.findById(req.params.id);
     if (!user)
       return res.status(404).json({ message: "User not found" });
 
-    Object.assign(user, req.body);
+    const { password, email, ...safeFields } = req.body;
+    Object.assign(user, safeFields);
+
+    if (email) {
+      user.email = email.toLowerCase();
+    }
+
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
     await user.save();
 
-    res.json(user);
+    res.json(toPublicUser(user));
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -208,6 +237,10 @@ export const updateUser = async (req, res) => {
  */
 export const deleteUser = async (req, res) => {
   try {
+    if (req.userId !== req.params.id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user)
       return res.status(404).json({ message: "User not found" });
