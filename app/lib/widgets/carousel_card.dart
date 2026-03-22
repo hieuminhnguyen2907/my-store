@@ -17,7 +17,7 @@ class CarouselCard extends StatelessWidget {
         ),
       ),
       child: Container(
-        decoration: BoxDecoration(color: Colors.black.withOpacity(0.2)),
+        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.2)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -67,7 +67,7 @@ class CarouselCard extends StatelessWidget {
                 },
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     width: 1.5,
                   ),
                   padding: const EdgeInsets.symmetric(
@@ -81,7 +81,7 @@ class CarouselCard extends StatelessWidget {
                 child: Text(
                   'Shopping now',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,

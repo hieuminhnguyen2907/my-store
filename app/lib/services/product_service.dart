@@ -8,7 +8,7 @@ class ProductService {
   static Future<List<Product>> getFeaturedProducts() async {
     try {
       final response = await http
-          .get(Uri.parse('$PRODUCTS_ENDPOINT?featured=true'))
+          .get(Uri.parse('$productsEndpoint?featured=true'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -29,7 +29,7 @@ class ProductService {
     bool? featured,
   }) async {
     try {
-      String url = PRODUCTS_ENDPOINT;
+      String url = productsEndpoint;
       final params = <String, String>{};
 
       if (category != null && category != 'all') {
@@ -61,7 +61,7 @@ class ProductService {
   static Future<List<Product>> getProductsByCategory(String categoryId) async {
     try {
       final response = await http
-          .get(Uri.parse('$PRODUCTS_ENDPOINT/category/$categoryId'))
+          .get(Uri.parse('$productsEndpoint/category/$categoryId'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -79,7 +79,7 @@ class ProductService {
   static Future<Product?> getProductById(String id) async {
     try {
       final response = await http
-          .get(Uri.parse('$PRODUCTS_ENDPOINT/$id'))
+          .get(Uri.parse('$productsEndpoint/$id'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -100,7 +100,7 @@ class ProductService {
       final response = await http
           .get(
             Uri.parse(
-              PRODUCTS_ENDPOINT,
+              productsEndpoint,
             ).replace(queryParameters: {'search': query}),
           )
           .timeout(const Duration(seconds: 10));
@@ -121,7 +121,7 @@ class ProductService {
     try {
       final response = await http
           .post(
-            Uri.parse(PRODUCTS_ENDPOINT),
+            Uri.parse(productsEndpoint),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(productData),
           )
@@ -145,7 +145,7 @@ class ProductService {
     try {
       final response = await http
           .put(
-            Uri.parse('$PRODUCTS_ENDPOINT/$id'),
+            Uri.parse('$productsEndpoint/$id'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(productData),
           )
@@ -165,7 +165,7 @@ class ProductService {
   static Future<bool> deleteProduct(String id) async {
     try {
       final response = await http
-          .delete(Uri.parse('$PRODUCTS_ENDPOINT/$id'))
+          .delete(Uri.parse('$productsEndpoint/$id'))
           .timeout(const Duration(seconds: 10));
 
       return response.statusCode == 200;

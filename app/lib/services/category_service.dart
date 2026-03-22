@@ -8,7 +8,7 @@ class CategoryService {
   static Future<List<Category>> getCategories() async {
     try {
       final response = await http
-          .get(Uri.parse(CATEGORIES_ENDPOINT))
+          .get(Uri.parse(categoriesEndpoint))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -26,7 +26,7 @@ class CategoryService {
   static Future<Category?> getCategoryById(String id) async {
     try {
       final response = await http
-          .get(Uri.parse('$CATEGORIES_ENDPOINT/$id'))
+          .get(Uri.parse('$categoriesEndpoint/$id'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -48,7 +48,7 @@ class CategoryService {
     try {
       final response = await http
           .post(
-            Uri.parse(CATEGORIES_ENDPOINT),
+            Uri.parse(categoriesEndpoint),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(categoryData),
           )
@@ -72,7 +72,7 @@ class CategoryService {
     try {
       final response = await http
           .put(
-            Uri.parse('$CATEGORIES_ENDPOINT/$id'),
+            Uri.parse('$categoriesEndpoint/$id'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(categoryData),
           )
@@ -92,7 +92,7 @@ class CategoryService {
   static Future<bool> deleteCategory(String id) async {
     try {
       final response = await http
-          .delete(Uri.parse('$CATEGORIES_ENDPOINT/$id'))
+          .delete(Uri.parse('$categoriesEndpoint/$id'))
           .timeout(const Duration(seconds: 10));
 
       return response.statusCode == 200;

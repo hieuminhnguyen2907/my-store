@@ -288,32 +288,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               confirmPassword: _confirmPasswordController.text,
                             );
 
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Account created successfully!',
-                                  ),
-                                ),
-                              );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Account created successfully!'),
+                              ),
+                            );
 
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/home',
-                                (route) => false,
-                              );
-                            }
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/home',
+                              (route) => false,
+                            );
                           } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e.toString()),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
                           } finally {
-                            if (mounted) {
+                            if (context.mounted) {
                               setState(() => _isLoading = false);
                             }
                           }

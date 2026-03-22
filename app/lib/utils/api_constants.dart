@@ -1,9 +1,9 @@
-const String API_BASE_URL = String.fromEnvironment(
+const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://192.168.0.100:5000/api',
+  defaultValue: 'http://192.168.0.103:5000/api',
 );
 
 // Endpoints
-const String PRODUCTS_ENDPOINT = '$API_BASE_URL/products';
-const String CATEGORIES_ENDPOINT = '$API_BASE_URL/categories';
-const String FEATURED_PRODUCTS_ENDPOINT = '$API_BASE_URL/products/featured';
+const String productsEndpoint = '$apiBaseUrl/products';
+const String categoriesEndpoint = '$apiBaseUrl/categories';
+const String featuredProductsEndpoint = '$apiBaseUrl/products/featured';

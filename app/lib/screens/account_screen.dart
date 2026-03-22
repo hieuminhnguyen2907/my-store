@@ -16,6 +16,12 @@ class _AccountScreenState extends State<AccountScreen> {
   String? userEmail = '';
   int _selectedBottomNavIndex = 3;
 
+  void _showComingSoon(String feature) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$feature will be available soon.')));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -137,32 +143,32 @@ class _AccountScreenState extends State<AccountScreen> {
                     _buildMenuTile(
                       icon: Icons.person_outline,
                       title: 'Edit Profile',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('Edit Profile'),
                     ),
                     _buildMenuTile(
                       icon: Icons.location_on_outlined,
                       title: 'Addresses',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('Addresses'),
                     ),
                     _buildMenuTile(
                       icon: Icons.favorite_outline,
                       title: 'Wishlist',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('Wishlist'),
                     ),
                     _buildMenuTile(
                       icon: Icons.shopping_bag_outlined,
                       title: 'My Orders',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('My Orders'),
                     ),
                     _buildMenuTile(
                       icon: Icons.settings_outlined,
                       title: 'Settings',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('Settings'),
                     ),
                     _buildMenuTile(
                       icon: Icons.help_outline,
                       title: 'Help & Support',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('Help & Support'),
                     ),
                     const SizedBox(height: 30),
 

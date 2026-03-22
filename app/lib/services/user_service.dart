@@ -99,7 +99,7 @@ class UserService {
 
       final response = await http
           .post(
-            Uri.parse('$API_BASE_URL/users/register'),
+            Uri.parse('$apiBaseUrl/users/register'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'name': name,
@@ -155,7 +155,7 @@ class UserService {
 
       final response = await http
           .post(
-            Uri.parse('$API_BASE_URL/users/login'),
+            Uri.parse('$apiBaseUrl/users/login'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'email': email, 'password': password}),
           )
@@ -198,7 +198,7 @@ class UserService {
     try {
       final response = await http
           .get(
-            Uri.parse('$API_BASE_URL/users/current'),
+            Uri.parse('$apiBaseUrl/users/current'),
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
@@ -239,7 +239,7 @@ class UserService {
     try {
       final response = await http
           .put(
-            Uri.parse('$API_BASE_URL/users/$userId'),
+            Uri.parse('$apiBaseUrl/users/$userId'),
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',

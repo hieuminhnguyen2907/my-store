@@ -58,12 +58,24 @@ class _MyAppState extends State<MyApp> {
       ),
       onGenerateRoute: (settings) {
         if (settings.name == '/product-detail') {
-          final product = settings.arguments as Product;
+          final args = settings.arguments;
+          if (args is! Product) {
+            return MaterialPageRoute(
+              builder: (context) => const Scaffold(
+                body: Center(child: Text('Invalid product payload')),
+              ),
+            );
+          }
+
+          final product = args;
           return MaterialPageRoute(
             builder: (context) => ProductDetailScreen(product: product),
           );
         }
         return null;
+      },
+      onUnknownRoute: (_) {
+        return MaterialPageRoute(builder: (context) => const WelcomeScreen());
       },
       routes: {
         '/welcome': (context) => const WelcomeScreen(),

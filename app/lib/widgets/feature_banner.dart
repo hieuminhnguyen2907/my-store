@@ -33,8 +33,8 @@ class FeatureBanner extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.black.withOpacity(0.3),
-              Colors.black.withOpacity(0.5),
+              Colors.black.withValues(alpha: 0.3),
+              Colors.black.withValues(alpha: 0.5),
             ],
           ),
         ),
@@ -56,7 +56,7 @@ class FeatureBanner extends StatelessWidget {
             Text(
               subtitle,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

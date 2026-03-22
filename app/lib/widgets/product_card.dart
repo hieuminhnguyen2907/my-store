@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import '../utils/image_resolver.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -115,14 +116,31 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildAdaptiveImage(String source) {
-    final bool isNetwork =
-        source.startsWith('http://') || source.startsWith('https://');
-
-    if (isNetwork) {
+    final resolvedNetworkUrl = resolveNetworkImageUrl(source);
+    final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
+    final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+    if (resolvedNetworkUrl != null) {
       return Image.network(
-        source,
+        resolvedNetworkUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
+          if (fallbackAssetPath != null) {
+            return Image.asset(
+              fallbackAssetPath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey.shade300,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 18,
+                  ),
+                );
+              },
+            );
+          }
+
           return Container(
             color: Colors.grey.shade300,
             alignment: Alignment.center,
@@ -132,10 +150,26 @@ class _ProductCardState extends State<ProductCard> {
       );
     }
 
+    final assetPath = fallbackAssetPath ?? source.trim();
+
     return Image.asset(
-      source,
+      assetPath,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
+        if (fallbackLegacyUrl != null) {
+          return Image.network(
+            fallbackLegacyUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey.shade300,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_outlined, size: 18),
+              );
+            },
+          );
+        }
+
         return Container(
           color: Colors.grey.shade300,
           alignment: Alignment.center,

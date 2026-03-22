@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
+import '../utils/image_resolver.dart';
 import '../widgets/home_header.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -331,16 +332,37 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildAdaptiveImage(String source, {double? width, double? height}) {
-    final bool isNetwork =
-        source.startsWith('http://') || source.startsWith('https://');
-
-    if (isNetwork) {
+    final resolvedNetworkUrl = resolveNetworkImageUrl(source);
+    final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
+    final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+    if (resolvedNetworkUrl != null) {
       return Image.network(
-        source,
+        resolvedNetworkUrl,
         width: width,
         height: height,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
+          if (fallbackAssetPath != null) {
+            return Image.asset(
+              fallbackAssetPath,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: width,
+                  height: height,
+                  color: Colors.grey.shade300,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 16,
+                  ),
+                );
+              },
+            );
+          }
+
           return Container(
             width: width,
             height: height,
@@ -352,12 +374,32 @@ class _CartScreenState extends State<CartScreen> {
       );
     }
 
+    final assetPath = fallbackAssetPath ?? source.trim();
+
     return Image.asset(
-      source,
+      assetPath,
       width: width,
       height: height,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
+        if (fallbackLegacyUrl != null) {
+          return Image.network(
+            fallbackLegacyUrl,
+            width: width,
+            height: height,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: width,
+                height: height,
+                color: Colors.grey.shade300,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_outlined, size: 16),
+              );
+            },
+          );
+        }
+
         return Container(
           width: width,
           height: height,

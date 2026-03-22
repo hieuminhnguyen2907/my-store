@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../utils/image_resolver.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -220,14 +221,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildAdaptiveImage(String source, {BoxFit fit = BoxFit.cover}) {
-    final bool isNetwork =
-        source.startsWith('http://') || source.startsWith('https://');
-
-    if (isNetwork) {
+    final resolvedNetworkUrl = resolveNetworkImageUrl(source);
+    final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
+    final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+    if (resolvedNetworkUrl != null) {
       return Image.network(
-        source,
+        resolvedNetworkUrl,
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
+          if (fallbackAssetPath != null) {
+            return Image.asset(
+              fallbackAssetPath,
+              fit: fit,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey.shade300,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 28,
+                  ),
+                );
+              },
+            );
+          }
+
           return Container(
             color: Colors.grey.shade300,
             alignment: Alignment.center,
@@ -237,10 +255,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
+    final assetPath = fallbackAssetPath ?? source.trim();
+
     return Image.asset(
-      source,
+      assetPath,
       fit: fit,
       errorBuilder: (context, error, stackTrace) {
+        if (fallbackLegacyUrl != null) {
+          return Image.network(
+            fallbackLegacyUrl,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey.shade300,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_outlined, size: 28),
+              );
+            },
+          );
+        }
+
         return Container(
           color: Colors.grey.shade300,
           alignment: Alignment.center,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../utils/image_resolver.dart';
 import '../widgets/home_header.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -13,11 +14,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedBottomNavIndex = 0;
-  String _selectedCategoryId = 'women';
+  String _selectedCategoryId = 'all';
   Future<List<Product>>? _featuredProductsFuture;
   Future<List<Product>>? _allProductsFuture;
 
   final List<_HomeCategory> _categories = const [
+    _HomeCategory(
+      id: 'all',
+      title: 'All',
+      icon: Icons.apps_outlined,
+      backgroundColor: Color(0xFFF2EEE8),
+    ),
     _HomeCategory(
       id: 'women',
       title: 'Women',
@@ -298,9 +305,11 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        final allProducts = snapshot.data ?? _fallbackFeaturedProducts;
         final products = _ensureMinItems(
-          _filterByCategory(snapshot.data ?? _fallbackFeaturedProducts),
+          _filterByCategory(allProducts),
           6,
+          fallbackPool: allProducts,
         );
 
         return SizedBox(
@@ -423,20 +432,22 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
-            height: 94,
+            height: 124,
             child: Center(
               child: CircularProgressIndicator(color: Colors.black),
             ),
           );
         }
 
+        final allProducts = snapshot.data ?? _fallbackAllProducts;
         final products = _ensureMinItems(
-          _filterByCategory(snapshot.data ?? _fallbackAllProducts),
+          _filterByCategory(allProducts),
           5,
+          fallbackPool: allProducts,
         );
 
         return SizedBox(
-          height: 94,
+          height: 124,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -630,6 +641,10 @@ class _HomeScreenState extends State<HomeScreen> {
       return _fallbackAllProducts;
     }
 
+    if (_selectedCategoryId == 'all') {
+      return products;
+    }
+
     final filtered = <Product>[];
     for (int i = 0; i < products.length; i++) {
       final categoryId = _virtualCategoryFromProduct(products[i], i);
@@ -641,7 +656,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return filtered.isEmpty ? products : filtered;
   }
 
-  List<Product> _ensureMinItems(List<Product> source, int minItems) {
+  List<Product> _ensureMinItems(
+    List<Product> source,
+    int minItems, {
+    List<Product>? fallbackPool,
+  }) {
     if (source.isEmpty || minItems <= 0) {
       return source;
     }
@@ -650,14 +669,43 @@ class _HomeScreenState extends State<HomeScreen> {
       return source.take(minItems).toList();
     }
 
-    final output = <Product>[];
-    for (int i = 0; i < minItems; i++) {
-      output.add(source[i % source.length]);
+    final output = List<Product>.from(source);
+    final existingIds = output.map((p) => p.id).toSet();
+    final pool = fallbackPool ?? source;
+
+    for (final product in pool) {
+      if (output.length >= minItems) {
+        break;
+      }
+      if (existingIds.add(product.id)) {
+        output.add(product);
+      }
     }
+
     return output;
   }
 
   String _virtualCategoryFromProduct(Product product, int index) {
+    final categoryRaw =
+        '${product.categoryId ?? ''} ${product.categoryName ?? ''}'
+            .toLowerCase();
+    if (categoryRaw.contains('women') ||
+        categoryRaw.contains('female') ||
+        categoryRaw.contains('lady')) {
+      return 'women';
+    }
+    if (categoryRaw.contains('men') ||
+        categoryRaw.contains('male') ||
+        categoryRaw.contains('man')) {
+      return 'men';
+    }
+    if (categoryRaw.contains('beauty') ||
+        categoryRaw.contains('skin') ||
+        categoryRaw.contains('care') ||
+        categoryRaw.contains('cosmetic')) {
+      return 'beauty';
+    }
+
     final name = product.name.toLowerCase();
     if (name.contains('dress') ||
         name.contains('skirt') ||
@@ -668,11 +716,6 @@ class _HomeScreenState extends State<HomeScreen> {
         name.contains('shirt') ||
         name.contains('hoodie')) {
       return 'men';
-    }
-    if (name.contains('bag') ||
-        name.contains('watch') ||
-        name.contains('belt')) {
-      return 'accessories';
     }
     if (name.contains('beauty') ||
         name.contains('skin') ||
@@ -690,15 +733,37 @@ class _HomeScreenState extends State<HomeScreen> {
     double? height,
     BoxFit fit = BoxFit.cover,
   }) {
-    final bool isNetwork =
-        source.startsWith('http://') || source.startsWith('https://');
-    if (isNetwork) {
+    final resolvedNetworkUrl = resolveNetworkImageUrl(source);
+    final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
+    final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+    if (resolvedNetworkUrl != null) {
       return Image.network(
-        source,
+        resolvedNetworkUrl,
         width: width,
         height: height,
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
+          if (fallbackAssetPath != null) {
+            return Image.asset(
+              fallbackAssetPath,
+              width: width,
+              height: height,
+              fit: fit,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: width,
+                  height: height,
+                  color: Colors.grey.shade300,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 18,
+                  ),
+                );
+              },
+            );
+          }
+
           return Container(
             width: width,
             height: height,
@@ -710,12 +775,32 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    final assetPath = fallbackAssetPath ?? source.trim();
+
     return Image.asset(
-      source,
+      assetPath,
       width: width,
       height: height,
       fit: fit,
       errorBuilder: (context, error, stackTrace) {
+        if (fallbackLegacyUrl != null) {
+          return Image.network(
+            fallbackLegacyUrl,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: width,
+                height: height,
+                color: Colors.grey.shade300,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_outlined, size: 18),
+              );
+            },
+          );
+        }
+
         return Container(
           width: width,
           height: height,
@@ -733,28 +818,32 @@ class _HomeScreenState extends State<HomeScreen> {
       name: 'Victorian Elegance Shirt',
       description: 'Classic modern shirt for daily styling',
       price: 39.99,
-      imageUrl: 'assets/images/carousel_1.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=500&auto=format&fit=crop', // Ảnh sơ mi trắng tối giản
     ),
     Product(
       id: 'f2',
       name: 'Long Sleeve Dress',
       description: 'Minimal long sleeve outfit with soft tone',
       price: 45.00,
-      imageUrl: 'assets/images/carousel_2.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=500&auto=format&fit=crop', // Ảnh váy lụa dài tay
     ),
     Product(
       id: 'f3',
       name: 'Stylish Fall Coat',
       description: 'Warm and elegant for autumn days',
       price: 80.00,
-      imageUrl: 'assets/images/carousel_3.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?q=80&w=500&auto=format&fit=crop', // Ảnh áo măng tô thu đông
     ),
     Product(
       id: 'f4',
       name: 'Essential Casual Hoodie',
       description: 'Soft hoodie for modern wardrobe',
       price: 42.50,
-      imageUrl: 'assets/images/carousel_1.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=500&auto=format&fit=crop', // Ảnh áo Hoodie xám
     ),
   ];
 
@@ -764,42 +853,48 @@ class _HomeScreenState extends State<HomeScreen> {
       name: 'White Fashion Hoodie',
       description: 'A clean hoodie style for all-day comfort',
       price: 29.00,
-      imageUrl: 'assets/images/carousel_1.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a2',
       name: 'Cotton Premium Shirt',
       description: 'Premium cotton shirt with modern cut',
       price: 30.00,
-      imageUrl: 'assets/images/carousel_2.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a3',
       name: 'Elegant Leather Bag',
       description: 'Hand-crafted leather bag for city looks',
       price: 69.00,
-      imageUrl: 'assets/images/carousel_3.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a4',
       name: 'Natural Beauty Set',
       description: 'Skincare essentials for daily routine',
       price: 34.00,
-      imageUrl: 'assets/images/carousel_1.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a5',
       name: 'Classic Women Dress',
       description: 'Soft fabric dress with elegant silhouette',
       price: 54.00,
-      imageUrl: 'assets/images/carousel_2.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a6',
       name: 'Everyday Men Shirt',
       description: 'Refined shirt for office and cafe',
       price: 37.00,
-      imageUrl: 'assets/images/carousel_3.jpg',
+      imageUrl:
+          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=500&auto=format&fit=crop',
     ),
   ];
 }
