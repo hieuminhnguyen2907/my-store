@@ -45,6 +45,9 @@ class OrderRecord {
   final String? receiverPhone;
   final String? shippingAddress;
   final String status;
+  final String paymentMethod;
+  final String paymentStatus;
+  final String? paymentGatewayOrderId;
 
   OrderRecord({
     required this.id,
@@ -57,6 +60,9 @@ class OrderRecord {
     this.receiverPhone,
     this.shippingAddress,
     this.status = 'placed',
+    this.paymentMethod = 'cod',
+    this.paymentStatus = 'unpaid',
+    this.paymentGatewayOrderId,
   });
 
   int get totalQuantity {
@@ -84,6 +90,9 @@ class OrderRecord {
       receiverPhone: json['receiverPhone']?.toString(),
       shippingAddress: json['shippingAddress']?.toString(),
       status: (json['status'] ?? 'placed').toString(),
+      paymentMethod: (json['paymentMethod'] ?? 'cod').toString(),
+      paymentStatus: (json['paymentStatus'] ?? 'unpaid').toString(),
+      paymentGatewayOrderId: json['paymentGatewayOrderId']?.toString(),
     );
   }
 
@@ -99,6 +108,9 @@ class OrderRecord {
       'receiverPhone': receiverPhone,
       'shippingAddress': shippingAddress,
       'status': status,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': paymentStatus,
+      'paymentGatewayOrderId': paymentGatewayOrderId,
     };
   }
 }
@@ -140,6 +152,10 @@ class OrderService {
     String? receiverName,
     String? receiverPhone,
     String? shippingAddress,
+    String status = 'placed',
+    String paymentMethod = 'cod',
+    String paymentStatus = 'unpaid',
+    String? paymentGatewayOrderId,
   }) async {
     final orders = await getOrders();
 
@@ -153,11 +169,50 @@ class OrderService {
       receiverName: receiverName,
       receiverPhone: receiverPhone,
       shippingAddress: shippingAddress,
+      status: status,
+      paymentMethod: paymentMethod,
+      paymentStatus: paymentStatus,
+      paymentGatewayOrderId: paymentGatewayOrderId,
     );
 
     orders.insert(0, order);
     await _saveOrders(orders);
     return order;
+  }
+
+  static Future<OrderRecord?> updateOrderPayment({
+    required String orderId,
+    required String paymentStatus,
+    String? paymentGatewayOrderId,
+    String? orderStatus,
+  }) async {
+    final orders = await getOrders();
+    final index = orders.indexWhere((order) => order.id == orderId);
+    if (index < 0) {
+      return null;
+    }
+
+    final current = orders[index];
+    final updated = OrderRecord(
+      id: current.id,
+      createdAt: current.createdAt,
+      items: current.items,
+      subtotal: current.subtotal,
+      shipping: current.shipping,
+      total: current.total,
+      receiverName: current.receiverName,
+      receiverPhone: current.receiverPhone,
+      shippingAddress: current.shippingAddress,
+      status: orderStatus ?? current.status,
+      paymentMethod: current.paymentMethod,
+      paymentStatus: paymentStatus,
+      paymentGatewayOrderId:
+          paymentGatewayOrderId ?? current.paymentGatewayOrderId,
+    );
+
+    orders[index] = updated;
+    await _saveOrders(orders);
+    return updated;
   }
 
   static Future<void> clearOrders() async {

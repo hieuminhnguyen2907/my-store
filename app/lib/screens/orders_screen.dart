@@ -14,6 +14,41 @@ class _OrdersScreenState extends State<OrdersScreen> {
   bool _isLoading = true;
   List<OrderRecord> _orders = [];
 
+  String _paymentStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'Đã thanh toán';
+      case 'failed':
+        return 'Thanh toán thất bại';
+      case 'pending':
+        return 'Đang chờ thanh toán';
+      case 'unpaid':
+      default:
+        return 'Chưa thanh toán';
+    }
+  }
+
+  Color _paymentStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return Colors.green;
+      case 'failed':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      case 'unpaid':
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _paymentMethodLabel(String method) {
+    if (method.toLowerCase() == 'momo') {
+      return 'MoMo';
+    }
+    return 'COD';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +121,23 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         Text('Sản phẩm: ${order.totalQuantity}'),
                         const SizedBox(height: 4),
                         Text('Tổng: ${formatVnd(order.total)}'),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Phương thức: ${_paymentMethodLabel(order.paymentMethod)}',
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Text('Thanh toán: '),
+                            Text(
+                              _paymentStatusLabel(order.paymentStatus),
+                              style: TextStyle(
+                                color: _paymentStatusColor(order.paymentStatus),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                         if ((order.shippingAddress ?? '').isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text('Giao đến: ${order.shippingAddress}'),

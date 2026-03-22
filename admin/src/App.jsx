@@ -640,11 +640,6 @@ function App() {
 
   const renderUsers = () => (
     <Card className="admin-panel-card" title="Quản lý người dùng">
-      <Alert
-        style={{ marginBottom: 12 }}
-        type="info"
-        message="Người dùng tự đăng ký tài khoản trong app. Admin chỉ theo dõi danh sách người dùng."
-      />
 
       <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
         <Col xs={24} md={16}>

@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
+import '../services/payment_service.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/storage_service.dart';
 
@@ -12,12 +16,17 @@ class CheckoutScreen extends StatefulWidget {
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
+class _CheckoutScreenState extends State<CheckoutScreen>
+    with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _isPlacingOrder = false;
+  bool _isVerifyingPayment = false;
   List<CartItem> _cartItems = [];
   List<Map<String, dynamic>> _addresses = [];
   int _selectedAddressIndex = -1;
+  String _selectedPaymentMethod = 'cod';
+  String? _pendingAppOrderId;
+  String? _pendingMomoOrderId;
 
   double get _subtotal {
     double total = 0;
@@ -34,7 +43,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCheckoutData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _verifyPendingPaymentIfAny();
+    }
   }
 
   Future<void> _loadCheckoutData() async {
@@ -73,6 +96,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
+    if (_pendingMomoOrderId != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang chờ xác nhận thanh toán trước đó. Vui lòng đợi.'),
+        ),
+      );
+      return;
+    }
+
     if (_cartItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Giỏ hàng của bạn đang trống')),
@@ -95,7 +127,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final shippingAddress =
           '${selectedAddress['address'] ?? ''}, ${selectedAddress['city'] ?? ''}, ${selectedAddress['country'] ?? ''}';
 
-      await OrderService.createOrder(
+      final pendingOrder = await OrderService.createOrder(
         items: _cartItems
             .map(
               (item) => OrderItem(
@@ -111,15 +143,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         receiverName: selectedAddress['fullname']?.toString(),
         receiverPhone: selectedAddress['phoneNumber']?.toString(),
         shippingAddress: shippingAddress,
+        status: _selectedPaymentMethod == 'momo' ? 'pending_payment' : 'placed',
+        paymentMethod: _selectedPaymentMethod,
+        paymentStatus: _selectedPaymentMethod == 'momo' ? 'pending' : 'unpaid',
       );
 
-      await CartService.clearCart();
+      if (_selectedPaymentMethod == 'cod') {
+        await CartService.clearCart();
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đặt hàng thành công')));
+        Navigator.pushReplacementNamed(context, '/orders');
+        return;
+      }
+
+      final momoPayment = await PaymentService.createMomoPayment(
+        amount: _total.round(),
+        clientOrderId: pendingOrder.id,
+      );
+
+      await OrderService.updateOrderPayment(
+        orderId: pendingOrder.id,
+        paymentStatus: 'pending',
+        paymentGatewayOrderId: momoPayment.momoOrderId,
+      );
+
+      final launched = await _openExternalPaymentPage(momoPayment);
+      if (!launched) {
+        throw Exception(
+          'Không thể mở MoMo. Hãy kiểm tra đã cài app MoMo (Sandbox), hoặc thử lại bằng trình duyệt.',
+        );
+      }
+
+      _pendingAppOrderId = pendingOrder.id;
+      _pendingMomoOrderId = momoPayment.momoOrderId;
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đặt hàng thành công')));
-      Navigator.pushReplacementNamed(context, '/orders');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Vui lòng hoàn tất thanh toán trên MoMo. App sẽ tự kiểm tra khi bạn quay lại.',
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -128,6 +195,122 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } finally {
       if (mounted) {
         setState(() => _isPlacingOrder = false);
+      }
+    }
+  }
+
+  Future<bool> _openExternalPaymentPage(MomoCreatePaymentResult payment) async {
+    final isMobile = Platform.isAndroid || Platform.isIOS;
+    final candidates = isMobile
+        ? payment.launchCandidates
+        : <String>[payment.payUrl];
+
+    for (final candidate in candidates) {
+      final uri = Uri.tryParse(candidate);
+      if (uri == null) {
+        continue;
+      }
+
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launched) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<void> _verifyPendingPaymentIfAny() async {
+    final appOrderId = _pendingAppOrderId;
+    final momoOrderId = _pendingMomoOrderId;
+    if (appOrderId == null || momoOrderId == null || _isVerifyingPayment) {
+      return;
+    }
+
+    await _verifyMomoPayment(appOrderId: appOrderId, momoOrderId: momoOrderId);
+  }
+
+  Future<void> _verifyMomoPayment({
+    required String appOrderId,
+    required String momoOrderId,
+  }) async {
+    if (_isVerifyingPayment) {
+      return;
+    }
+
+    setState(() => _isVerifyingPayment = true);
+    try {
+      MomoPaymentStatusResult status =
+          await PaymentService.getMomoPaymentStatus(momoOrderId);
+
+      // Give MoMo/IPN some time to settle before concluding final state.
+      const maxAttempts = 5;
+      int attempt = 1;
+      while (status.isPending && attempt < maxAttempts) {
+        await Future.delayed(const Duration(seconds: 2));
+        status = await PaymentService.getMomoPaymentStatus(momoOrderId);
+        attempt++;
+      }
+
+      if (status.isPaid) {
+        await OrderService.updateOrderPayment(
+          orderId: appOrderId,
+          paymentStatus: 'paid',
+          paymentGatewayOrderId: momoOrderId,
+          orderStatus: 'placed',
+        );
+        await CartService.clearCart();
+        if (!mounted) return;
+        _pendingAppOrderId = null;
+        _pendingMomoOrderId = null;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Thanh toán thành công')));
+        Navigator.pushReplacementNamed(context, '/orders');
+        return;
+      }
+
+      if (status.isFailed) {
+        await OrderService.updateOrderPayment(
+          orderId: appOrderId,
+          paymentStatus: 'failed',
+          paymentGatewayOrderId: momoOrderId,
+          orderStatus: 'payment_failed',
+        );
+        if (!mounted) return;
+        _pendingAppOrderId = null;
+        _pendingMomoOrderId = null;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status.error?.isNotEmpty == true
+                  ? status.error!
+                  : 'Thanh toán thất bại. Vui lòng thử lại.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/orders');
+        return;
+      }
+
+      if (!mounted) return;
+      _pendingAppOrderId = null;
+      _pendingMomoOrderId = null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Giao dịch đang chờ xác nhận từ MoMo. Vui lòng kiểm tra lại sau.',
+          ),
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/orders');
+    } finally {
+      if (mounted) {
+        setState(() => _isVerifyingPayment = false);
       }
     }
   }
@@ -213,6 +396,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         }),
                       const SizedBox(height: 16),
                       Text(
+                        'Phương thức thanh toán',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: RadioGroup<String>(
+                          groupValue: _selectedPaymentMethod,
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _selectedPaymentMethod = value);
+                          },
+                          child: Column(
+                            children: [
+                              const RadioListTile<String>(
+                                value: 'cod',
+                                title: Text('Thanh toán khi nhận hàng (COD)'),
+                              ),
+                              const Divider(height: 1),
+                              const RadioListTile<String>(
+                                value: 'momo',
+                                title: Text('Ví MoMo (thanh toán online)'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
                         'Tóm tắt đơn hàng',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
@@ -267,7 +483,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Đặt hàng',
+                                  'Tiếp tục',
                                   style: TextStyle(color: Colors.white),
                                 ),
                         ),
