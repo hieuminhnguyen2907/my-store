@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/wishlist_service.dart';
 import '../utils/image_resolver.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -20,6 +21,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     _isFavorite = widget.product.isFavorite;
+    _loadFavoriteState();
+  }
+
+  Future<void> _loadFavoriteState() async {
+    final isFavorite = await WishlistService.isFavorite(widget.product.id);
+    if (!mounted) return;
+    setState(() {
+      _isFavorite = isFavorite;
+    });
   }
 
   @override
@@ -39,8 +49,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               color: _isFavorite ? Colors.red : Colors.black,
             ),
             onPressed: () {
-              setState(() {
-                _isFavorite = !_isFavorite;
+              WishlistService.toggle(widget.product).then((isFavorite) {
+                if (!mounted) return;
+                setState(() {
+                  _isFavorite = isFavorite;
+                });
               });
             },
           ),

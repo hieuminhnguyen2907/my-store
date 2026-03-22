@@ -281,11 +281,7 @@ class _CartScreenState extends State<CartScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Checkout flow will be implemented next.'),
-                  ),
-                );
+                Navigator.pushNamed(context, '/checkout');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,

@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   register,
   login,
+  forgotPassword,
   getCurrentUser,
   createUser,
   getUsers,
@@ -16,6 +17,7 @@ const router = Router();
 // Auth routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
 router.get("/current", authMiddleware, getCurrentUser);
 
 // CRUD routes

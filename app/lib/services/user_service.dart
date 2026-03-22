@@ -13,6 +13,7 @@ class User {
   final String? phone;
   final String? avatar;
   final String role;
+  final List<Map<String, dynamic>> addresses;
 
   User({
     required this.id,
@@ -21,9 +22,20 @@ class User {
     this.phone,
     this.avatar,
     required this.role,
+    this.addresses = const [],
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final parsedAddresses = <Map<String, dynamic>>[];
+    final rawAddresses = json['addresses'];
+    if (rawAddresses is List) {
+      for (final address in rawAddresses) {
+        if (address is Map) {
+          parsedAddresses.add(Map<String, dynamic>.from(address));
+        }
+      }
+    }
+
     return User(
       id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
@@ -31,6 +43,7 @@ class User {
       phone: json['phone'],
       avatar: json['avatar'],
       role: json['role'] ?? 'user',
+      addresses: parsedAddresses,
     );
   }
 
@@ -42,6 +55,7 @@ class User {
       'phone': phone,
       'avatar': avatar,
       'role': role,
+      'addresses': addresses,
     };
   }
 }
@@ -230,6 +244,65 @@ class UserService {
     }
   }
 
+  // Reset password by email
+  static Future<void> forgotPassword({
+    required String email,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      if (!_isValidEmail(email.trim())) {
+        throw ValidationException('Please enter a valid email address');
+      }
+      if (newPassword.length < 6) {
+        throw ValidationException('Password must be at least 6 characters');
+      }
+      if (newPassword != confirmPassword) {
+        throw ValidationException('Passwords do not match');
+      }
+
+      final response = await http
+          .post(
+            Uri.parse('$apiBaseUrl/users/forgot-password'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'newPassword': newPassword,
+              'confirmPassword': confirmPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return;
+      }
+
+      if (response.statusCode == 400 || response.statusCode == 404) {
+        final error = jsonDecode(response.body);
+        throw ValidationException(
+          error['message'] ?? 'Unable to reset password',
+        );
+      }
+
+      throw AppException(
+        message: 'Server error occurred during password reset',
+        code: response.statusCode.toString(),
+      );
+    } on ValidationException {
+      rethrow;
+    } on AppException {
+      rethrow;
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to server. Please check your internet connection.',
+      );
+    } on TimeoutException {
+      throw NetworkException('Request timeout. Please try again.');
+    } catch (e) {
+      throw AppException(message: 'Unexpected error: $e');
+    }
+  }
+
   // Update user profile
   static Future<User> updateProfile({
     required String userId,
@@ -250,7 +323,8 @@ class UserService {
 
       if (response.statusCode == 200) {
         final user = User.fromJson(jsonDecode(response.body));
-        await StorageService.saveUserData(user.toJson());
+        final existingData = await StorageService.getUserData() ?? {};
+        await StorageService.saveUserData({...existingData, ...user.toJson()});
         return user;
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw AuthException('Session expired. Please login again.');

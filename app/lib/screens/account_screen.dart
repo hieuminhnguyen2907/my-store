@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import '../utils/storage_service.dart';
 import '../widgets/home_header.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'addresses_screen.dart';
+import 'edit_profile_screen.dart';
+import 'help_support_screen.dart';
+import 'orders_screen.dart';
+import 'settings_screen.dart';
 import 'welcome_screen.dart';
+import 'wishlist_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -15,12 +21,6 @@ class _AccountScreenState extends State<AccountScreen> {
   String userName = 'User';
   String? userEmail = '';
   int _selectedBottomNavIndex = 3;
-
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$feature will be available soon.')));
-  }
 
   @override
   void initState() {
@@ -143,32 +143,82 @@ class _AccountScreenState extends State<AccountScreen> {
                     _buildMenuTile(
                       icon: Icons.person_outline,
                       title: 'Edit Profile',
-                      onTap: () => _showComingSoon('Edit Profile'),
+                      onTap: () async {
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfileScreen(),
+                          ),
+                        );
+
+                        if (updated == true) {
+                          _loadUserData();
+                        }
+                      },
                     ),
                     _buildMenuTile(
                       icon: Icons.location_on_outlined,
                       title: 'Addresses',
-                      onTap: () => _showComingSoon('Addresses'),
+                      onTap: () async {
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddressesScreen(),
+                          ),
+                        );
+
+                        if (updated == true) {
+                          _loadUserData();
+                        }
+                      },
                     ),
                     _buildMenuTile(
                       icon: Icons.favorite_outline,
                       title: 'Wishlist',
-                      onTap: () => _showComingSoon('Wishlist'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WishlistScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _buildMenuTile(
                       icon: Icons.shopping_bag_outlined,
                       title: 'My Orders',
-                      onTap: () => _showComingSoon('My Orders'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OrdersScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _buildMenuTile(
                       icon: Icons.settings_outlined,
                       title: 'Settings',
-                      onTap: () => _showComingSoon('Settings'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _buildMenuTile(
                       icon: Icons.help_outline,
                       title: 'Help & Support',
-                      onTap: () => _showComingSoon('Help & Support'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HelpSupportScreen(),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 30),
 

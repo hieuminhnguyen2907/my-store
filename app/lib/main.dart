@@ -8,6 +8,14 @@ import 'screens/cart_screen.dart';
 import 'screens/account_screen.dart';
 import 'screens/products_screen.dart';
 import 'screens/product_detail_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/wishlist_screen.dart';
+import 'screens/addresses_screen.dart';
+import 'screens/edit_profile_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/help_support_screen.dart';
+import 'screens/forgot_password_screen.dart';
 import 'models/product.dart';
 import 'utils/storage_service.dart';
 
@@ -86,6 +94,14 @@ class _MyAppState extends State<MyApp> {
         '/cart': (context) => const CartScreen(),
         '/account': (context) => const AccountScreen(),
         '/products': (context) => const AllProductsScreen(),
+        '/checkout': (context) => const CheckoutScreen(),
+        '/orders': (context) => const OrdersScreen(),
+        '/wishlist': (context) => const WishlistScreen(),
+        '/addresses': (context) => const AddressesScreen(),
+        '/edit-profile': (context) => const EditProfileScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/help-support': (context) => const HelpSupportScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
       },
     );
   }
