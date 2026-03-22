@@ -11,6 +11,8 @@ const toPublicUser = (user) => ({
   phone: user.phone,
   role: user.role,
   addresses: user.addresses,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
 });
 
 /**
@@ -58,7 +60,7 @@ export const register = async (req, res) => {
     });
 
     // Generate token
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -68,8 +70,11 @@ export const register = async (req, res) => {
       user: toPublicUser(user),
     });
   } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: "Server error during registration" });
+    console.error("Register error:", error.message, error.stack);
+    res.status(500).json({
+      message: "Server error during registration",
+      error: error.message
+    });
   }
 };
 
@@ -97,7 +102,7 @@ export const login = async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -227,10 +232,6 @@ export const getUsers = async (req, res) => {
  */
 export const getUserById = async (req, res) => {
   try {
-    if (req.userId !== req.params.id) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
     const user = await User.findById(req.params.id).select('-password');
     if (!user)
       return res.status(404).json({ message: "User not found" });
@@ -246,10 +247,6 @@ export const getUserById = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
   try {
-    if (req.userId !== req.params.id) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
     const user = await User.findById(req.params.id);
     if (!user)
       return res.status(404).json({ message: "User not found" });
@@ -278,10 +275,6 @@ export const updateUser = async (req, res) => {
  */
 export const deleteUser = async (req, res) => {
   try {
-    if (req.userId !== req.params.id) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user)
       return res.status(404).json({ message: "User not found" });

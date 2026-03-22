@@ -28,6 +28,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { categoryService } from "./services/category.service";
+import { orderService } from "./services/order.service";
 import { productService } from "./services/product.service";
 import { userService } from "./services/user.service";
 
@@ -159,6 +160,7 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const [categoryKeyword, setCategoryKeyword] = useState("");
   const [categoryStatus, setCategoryStatus] = useState("all");
@@ -167,6 +169,9 @@ function App() {
   const [productCategory, setProductCategory] = useState("all");
   const [userKeyword, setUserKeyword] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [orderKeyword, setOrderKeyword] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState("all");
   const [categoryImagePreview, setCategoryImagePreview] = useState("");
   const [productImagePreview, setProductImagePreview] = useState("");
 
@@ -219,6 +224,10 @@ function App() {
       const stock = Number(item.stock || 0);
       return stock > 0 && stock < 10;
     }).length;
+    const pendingOrderCount = orders.filter((item) =>
+      ["pending_payment", "placed", "processing", "shipping"].includes(item.status)
+    ).length;
+    const paidOrderCount = orders.filter((item) => item.paymentStatus === "paid").length;
 
     return {
       activeCategoryCount,
@@ -226,8 +235,11 @@ function App() {
       outOfStockCount,
       lowStockCount,
       userCount: users.length,
+      orderCount: orders.length,
+      pendingOrderCount,
+      paidOrderCount,
     };
-  }, [categories, products, users]);
+  }, [categories, products, users, orders]);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((item) => {
@@ -273,6 +285,25 @@ function App() {
     });
   }, [users, userKeyword, userRoleFilter]);
 
+  const filteredOrders = useMemo(() => {
+    return orders.filter((item) => {
+      const keyword = orderKeyword.trim().toLowerCase();
+      const hitKeyword =
+        !keyword ||
+        item.id?.toLowerCase().includes(keyword) ||
+        item.receiverName?.toLowerCase().includes(keyword) ||
+        item.receiverPhone?.toLowerCase().includes(keyword) ||
+        item.shippingAddress?.toLowerCase().includes(keyword) ||
+        item.user?.name?.toLowerCase().includes(keyword) ||
+        item.user?.email?.toLowerCase().includes(keyword);
+      const hitStatus =
+        orderStatusFilter === "all" || item.status === orderStatusFilter;
+      const hitPayment =
+        orderPaymentFilter === "all" || item.paymentStatus === orderPaymentFilter;
+      return hitKeyword && hitStatus && hitPayment;
+    });
+  }, [orders, orderKeyword, orderStatusFilter, orderPaymentFilter]);
+
   const userColumns = [
     {
       title: "Họ tên",
@@ -303,6 +334,103 @@ function App() {
       key: "createdAt",
       render: (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-"),
     },
+    {
+      title: "Thao tác",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button
+            onClick={() =>
+              updateUserRole(record, record.role === "admin" ? "user" : "admin")
+            }
+          >
+            {record.role === "admin" ? "Hạ quyền" : "Nâng admin"}
+          </Button>
+          <Popconfirm
+            title="Xóa người dùng này?"
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => deleteUserAccount(record.id)}
+          >
+            <Button danger>Xóa</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const orderColumns = [
+    {
+      title: "Mã đơn",
+      dataIndex: "id",
+      key: "id",
+      width: 180,
+      render: (value) => <Tooltip title={value}>{value?.slice(-8)}</Tooltip>,
+    },
+    {
+      title: "Khách hàng",
+      key: "customer",
+      render: (_, record) => (
+        <div>
+          <div>{record.user?.name || record.receiverName || "-"}</div>
+          <Typography.Text type="secondary">{record.user?.email || ""}</Typography.Text>
+        </div>
+      ),
+    },
+    {
+      title: "Tổng tiền",
+      dataIndex: "total",
+      key: "total",
+      render: (value) => formatVnd(value),
+    },
+    {
+      title: "Trạng thái đơn",
+      dataIndex: "status",
+      key: "status",
+      render: (value, record) => (
+        <Select
+          size="small"
+          value={value}
+          style={{ width: 150 }}
+          onChange={(nextValue) => updateOrderStatus(record.id, nextValue)}
+          options={[
+            { label: "Chờ thanh toán", value: "pending_payment" },
+            { label: "Đã đặt", value: "placed" },
+            { label: "Đang xử lý", value: "processing" },
+            { label: "Đang giao", value: "shipping" },
+            { label: "Hoàn tất", value: "completed" },
+            { label: "Đã hủy", value: "cancelled" },
+            { label: "Lỗi thanh toán", value: "payment_failed" },
+          ]}
+        />
+      ),
+    },
+    {
+      title: "Thanh toán",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
+      render: (value, record) => (
+        <Select
+          size="small"
+          value={value}
+          style={{ width: 130 }}
+          onChange={(nextValue) => updateOrderPaymentStatus(record.id, nextValue)}
+          options={[
+            { label: "Chưa TT", value: "unpaid" },
+            { label: "Chờ TT", value: "pending" },
+            { label: "Đã TT", value: "paid" },
+            { label: "Thất bại", value: "failed" },
+          ]}
+        />
+      ),
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-"),
+    },
   ];
 
   const categoryColumnsConfig = categoryColumns(
@@ -320,15 +448,20 @@ function App() {
     setErrorText("");
 
     try {
-      const [categoryResponse, productResponse, userResponse] = await Promise.all([
+      const [categoryResponse, productResponse, userResponse, orderResponse] = await Promise.all([
         categoryService.getAll(),
         productService.getAll(),
         userService.getAll().catch(() => ({ data: [] })),
+        orderService.getAll().catch(() => ({ data: [] })),
       ]);
 
       setCategories(categoryResponse.data || []);
       setProducts(productResponse.data || []);
       setUsers(userResponse.data || []);
+      setOrders((orderResponse?.data || []).map((item) => ({
+        ...item,
+        user: item.user || null,
+      })));
     } catch (error) {
       const text = error.response?.data?.message || "Không thể tải dữ liệu";
       setErrorText(text);
@@ -442,6 +575,48 @@ function App() {
     }
   };
 
+  const updateUserRole = async (user, role) => {
+    try {
+      await userService.update(user.id, { role });
+      message.success("Cập nhật vai trò thành công");
+      await loadData();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể cập nhật vai trò");
+    }
+  };
+
+  const deleteUserAccount = async (id) => {
+    try {
+      await userService.delete(id);
+      message.success("Xóa người dùng thành công");
+      await loadData();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể xóa người dùng");
+    }
+  };
+
+  const updateOrderStatus = async (id, status) => {
+    try {
+      await orderService.updateStatus(id, status);
+      message.success("Cập nhật trạng thái đơn thành công");
+      await loadData();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể cập nhật trạng thái đơn");
+    }
+  };
+
+  const updateOrderPaymentStatus = async (id, paymentStatus) => {
+    try {
+      await orderService.updatePayment(id, { paymentStatus });
+      message.success("Cập nhật trạng thái thanh toán thành công");
+      await loadData();
+    } catch (error) {
+      message.error(
+        error.response?.data?.message || "Không thể cập nhật trạng thái thanh toán"
+      );
+    }
+  };
+
   const uploadImageToField = async (file, form, setPreview) => {
     if (!file?.type?.startsWith("image/")) {
       message.error("Vui lòng chọn đúng định dạng ảnh");
@@ -505,6 +680,15 @@ function App() {
               </Descriptions.Item>
               <Descriptions.Item label="Sản phẩm tạm ẩn">
                 {products.length - dashboardStats.activeProductCount}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tổng đơn hàng">
+                {dashboardStats.orderCount}
+              </Descriptions.Item>
+              <Descriptions.Item label="Đơn đang xử lý">
+                {dashboardStats.pendingOrderCount}
+              </Descriptions.Item>
+              <Descriptions.Item label="Đơn đã thanh toán">
+                {dashboardStats.paidOrderCount}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -674,10 +858,66 @@ function App() {
     </Card>
   );
 
+  const renderOrders = () => (
+    <Card className="admin-panel-card" title="Quản lý đơn hàng">
+      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
+        <Col xs={24} lg={10}>
+          <Input.Search
+            allowClear
+            placeholder="Tìm mã đơn, tên, email, số điện thoại, địa chỉ"
+            value={orderKeyword}
+            onChange={(event) => setOrderKeyword(event.target.value)}
+          />
+        </Col>
+        <Col xs={24} md={12} lg={7}>
+          <Select
+            style={{ width: "100%" }}
+            value={orderStatusFilter}
+            onChange={setOrderStatusFilter}
+            options={[
+              { label: "Tất cả trạng thái đơn", value: "all" },
+              { label: "Chờ thanh toán", value: "pending_payment" },
+              { label: "Đã đặt", value: "placed" },
+              { label: "Đang xử lý", value: "processing" },
+              { label: "Đang giao", value: "shipping" },
+              { label: "Hoàn tất", value: "completed" },
+              { label: "Đã hủy", value: "cancelled" },
+              { label: "Lỗi thanh toán", value: "payment_failed" },
+            ]}
+          />
+        </Col>
+        <Col xs={24} md={12} lg={7}>
+          <Select
+            style={{ width: "100%" }}
+            value={orderPaymentFilter}
+            onChange={setOrderPaymentFilter}
+            options={[
+              { label: "Tất cả trạng thái thanh toán", value: "all" },
+              { label: "Chưa thanh toán", value: "unpaid" },
+              { label: "Đang chờ", value: "pending" },
+              { label: "Đã thanh toán", value: "paid" },
+              { label: "Thất bại", value: "failed" },
+            ]}
+          />
+        </Col>
+      </Row>
+
+      <Table
+        className="admin-table"
+        rowKey="id"
+        columns={orderColumns}
+        dataSource={filteredOrders}
+        pagination={{ pageSize: 8 }}
+        scroll={{ x: 980 }}
+      />
+    </Card>
+  );
+
   const renderCurrentSection = () => {
     if (activeMenu === "dashboard") return renderDashboard();
     if (activeMenu === "categories") return renderCategories();
     if (activeMenu === "products") return renderProducts();
+    if (activeMenu === "orders") return renderOrders();
     return renderUsers();
   };
 
@@ -695,6 +935,7 @@ function App() {
               { key: "dashboard", label: "Tổng quan" },
               { key: "categories", label: "Danh mục" },
               { key: "products", label: "Sản phẩm" },
+              { key: "orders", label: "Đơn hàng" },
               { key: "users", label: "Người dùng" },
             ]}
           />

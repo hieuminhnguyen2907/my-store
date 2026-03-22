@@ -9,3 +9,4 @@ const String categoriesEndpoint = '$apiBaseUrl/categories';
 const String featuredProductsEndpoint = '$apiBaseUrl/products/featured';
 const String momoCreatePaymentEndpoint = '$apiBaseUrl/payments/momo/create';
 const String momoStatusEndpoint = '$apiBaseUrl/payments/momo/status';
+const String ordersEndpoint = '$apiBaseUrl/orders';

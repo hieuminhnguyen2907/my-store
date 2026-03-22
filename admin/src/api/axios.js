@@ -41,3 +41,10 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
+
+export const apiEndpoints = {
+  users: "/users",
+  products: "/products",
+  categories: "/categories",
+  orders: "/orders",
+};

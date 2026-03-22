@@ -10,7 +10,11 @@ import {
   updateUser,
   deleteUser,
 } from "./user.controller.js";
-import authMiddleware from "../../middleware/auth.js";
+import authMiddleware, {
+  requireAdmin,
+  requireSelfOrAdmin,
+  adminMiddleware,
+} from "../../middleware/auth.js";
 
 const router = Router();
 
@@ -21,10 +25,10 @@ router.post("/forgot-password", forgotPassword);
 router.get("/current", authMiddleware, getCurrentUser);
 
 // CRUD routes
-router.post("/", createUser);
-router.get("/", authMiddleware, getUsers);
-router.get("/:id", authMiddleware, getUserById);
-router.put("/:id", authMiddleware, updateUser);
-router.delete("/:id", authMiddleware, deleteUser);
+router.post("/", adminMiddleware, createUser);
+router.get("/", adminMiddleware, getUsers);
+router.get("/:id", authMiddleware, requireSelfOrAdmin, getUserById);
+router.put("/:id", authMiddleware, requireSelfOrAdmin, updateUser);
+router.delete("/:id", adminMiddleware, deleteUser);
 
 export default router;
