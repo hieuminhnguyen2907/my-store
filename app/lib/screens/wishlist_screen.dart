@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../services/wishlist_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/image_resolver.dart';
 
 class WishlistScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     child: _buildAdaptiveImage(item.imageUrl),
                   ),
                   title: Text(item.name),
-                  subtitle: Text('\$${item.price.toStringAsFixed(2)}'),
+                  subtitle: Text(formatVnd(item.price)),
                   onTap: () {
                     Navigator.pushNamed(
                       context,
@@ -74,8 +75,28 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Widget _buildAdaptiveImage(String source) {
+    final dataUriBytes = resolveDataUriImageBytes(source);
     final resolvedNetworkUrl = resolveNetworkImageUrl(source);
     final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
+
+    if (dataUriBytes != null) {
+      return Image.memory(
+        dataUriBytes,
+        width: 56,
+        height: 56,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 56,
+            height: 56,
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 18),
+          );
+        },
+      );
+    }
 
     if (resolvedNetworkUrl != null) {
       return Image.network(

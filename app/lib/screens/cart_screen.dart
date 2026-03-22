@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/image_resolver.dart';
 import '../widgets/home_header.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -62,7 +63,7 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
-  double get _shipping => _cartItems.isEmpty ? 0 : 4.99;
+  double get _shipping => _cartItems.isEmpty ? 0 : 30000;
 
   double get _grandTotal => _subtotal + _shipping;
 
@@ -205,7 +206,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '\$${item.product.price.toStringAsFixed(2)}',
+                  formatVnd(item.product.price),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
@@ -317,7 +318,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
         Text(
-          '\$${value.toStringAsFixed(2)}',
+          formatVnd(value),
           style: TextStyle(
             fontSize: emphasize ? 16 : 14,
             fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
@@ -328,9 +329,30 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildAdaptiveImage(String source, {double? width, double? height}) {
+    final dataUriBytes = resolveDataUriImageBytes(source);
     final resolvedNetworkUrl = resolveNetworkImageUrl(source);
     final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
     final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+
+    if (dataUriBytes != null) {
+      return Image.memory(
+        dataUriBytes,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 16),
+          );
+        },
+      );
+    }
+
     if (resolvedNetworkUrl != null) {
       return Image.network(
         resolvedNetworkUrl,

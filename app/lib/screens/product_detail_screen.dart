@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/wishlist_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/image_resolver.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -64,12 +65,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product Image
-            SizedBox(
-              width: double.infinity,
-              height: 300,
-              child: _buildAdaptiveImage(
-                widget.product.imageUrl,
-                fit: BoxFit.cover,
+            GestureDetector(
+              onTap: _showImagePreview,
+              child: Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 300,
+                    child: _buildAdaptiveImage(
+                      widget.product.imageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    right: 12,
+                    bottom: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            'Phóng to',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -114,7 +151,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // Price
                   Text(
-                    '\$${widget.product.price.toStringAsFixed(2)}',
+                    formatVnd(widget.product.price),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -233,10 +270,63 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  Future<void> _showImagePreview() async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Center(
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 4,
+                    child: _buildAdaptiveImage(
+                      widget.product.imageUrl,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildAdaptiveImage(String source, {BoxFit fit = BoxFit.cover}) {
+    final dataUriBytes = resolveDataUriImageBytes(source);
     final resolvedNetworkUrl = resolveNetworkImageUrl(source);
     final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
     final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+
+    if (dataUriBytes != null) {
+      return Image.memory(
+        dataUriBytes,
+        fit: fit,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 28),
+          );
+        },
+      );
+    }
+
     if (resolvedNetworkUrl != null) {
       return Image.network(
         resolvedNetworkUrl,

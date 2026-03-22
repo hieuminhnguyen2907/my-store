@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/image_resolver.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/home_header.dart';
@@ -118,6 +119,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _openProducts({String sortBy = 'default'}) {
+    Navigator.pushNamed(
+      context,
+      '/products',
+      arguments: {'categoryId': _selectedCategoryId, 'sortBy': sortBy},
+    );
+  }
+
   String get _selectedCategoryTitle {
     return _categories
         .firstWhere(
@@ -192,21 +201,25 @@ class _HomeScreenState extends State<HomeScreen> {
     final filteredAll = _filterByCategory(data.all);
     final filteredFeatured = _filterByCategory(data.featured);
 
-    final featureProducts = _ensureMinItems(
+    final featureProducts = _pickFeaturedProducts(
       filteredFeatured,
-      6,
       fallbackPool: filteredAll,
     );
 
-    final recommendedProducts = _ensureMinItems(
+    final featuredIds = featureProducts.map((item) => item.id).toSet();
+
+    final recommendedProducts = _buildRecommendedPool(
       filteredAll,
-      6,
       fallbackPool: data.all,
+      excludedIds: featuredIds,
     );
+
+    final recommendedIds = recommendedProducts.map((item) => item.id).toSet();
 
     final topCollection = _buildTopCollectionPool(
       filteredAll,
       fallbackPool: data.all,
+      excludedIds: {...featuredIds, ...recommendedIds},
     );
 
     final hasCategoryData =
@@ -219,22 +232,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Sản phẩm nổi bật', 'Xem tất cả', () {
-          Navigator.pushNamed(context, '/products');
+        _buildSectionHeader('Sản phẩm nổi bật', 'Mới & đang hot', () {
+          _openProducts(sortBy: 'priceDesc');
         }),
         const SizedBox(height: 12),
         _buildFeatureProducts(featureProducts),
+
         const SizedBox(height: 24),
-        _buildNewCollectionBanner(),
-        const SizedBox(height: 24),
-        _buildSectionHeader('Gợi ý cho bạn', 'Xem tất cả', () {
-          Navigator.pushNamed(context, '/products');
+
+        _buildSectionHeader('Gợi ý cho bạn', 'Phù hợp lựa chọn', () {
+          _openProducts();
         }),
         const SizedBox(height: 12),
         _buildRecommendedProducts(recommendedProducts),
+
         const SizedBox(height: 24),
-        _buildSectionHeader('Bộ sưu tập nổi bật', 'Xem tất cả', () {
-          Navigator.pushNamed(context, '/products');
+
+        _buildSectionHeader('Bộ sưu tập nổi bật', 'Theo phong cách', () {
+          _openProducts(sortBy: 'nameAsc');
         }),
         const SizedBox(height: 12),
         _buildTopCollection(topCollection),
@@ -245,14 +260,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLoadingState() {
     return Column(
       children: [
-        _buildSectionHeader('Sản phẩm nổi bật', 'Xem tất cả', () {}),
+        _buildSectionHeader(
+          'Sản phẩm nổi bật',
+          'Đang tải dữ liệu',
+          () {},
+          showAction: false,
+        ),
         const SizedBox(height: 12),
         const SizedBox(
           height: 230,
           child: Center(child: CircularProgressIndicator(color: Colors.black)),
         ),
         const SizedBox(height: 24),
-        _buildSectionHeader('Gợi ý cho bạn', 'Xem tất cả', () {}),
+        _buildSectionHeader(
+          'Gợi ý cho bạn',
+          'Đang tải dữ liệu',
+          () {},
+          showAction: false,
+        ),
         const SizedBox(height: 12),
         const SizedBox(
           height: 124,
@@ -394,46 +419,70 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSectionHeader(
     String title,
-    String actionText,
-    VoidCallback onTap,
-  ) {
+    String subtitle,
+    VoidCallback onTap, {
+    bool showAction = true,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
-          GestureDetector(
-            onTap: onTap,
-            child: Text(
-              actionText,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.w500,
+          if (showAction)
+            TextButton.icon(
+              onPressed: onTap,
+              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+              iconAlignment: IconAlignment.end,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
+              label: const Text('Xem tất cả'),
             ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildHeroBanner() {
+    final hero = _heroContent;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 188,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/carousel_1.jpg'),
+        image: DecorationImage(
+          image: AssetImage(hero.imagePath),
           fit: BoxFit.cover,
         ),
       ),
@@ -454,19 +503,19 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Text(
-              'Lựa chọn theo mùa',
-              style: TextStyle(
+            Text(
+              hero.tagline.toUpperCase(),
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 1.3,
+                letterSpacing: 1.2,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Làm mới\nphong cách mỗi ngày',
-              style: TextStyle(
+            Text(
+              hero.title,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 30,
                 fontWeight: FontWeight.w700,
@@ -478,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 34,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/products');
+                  _openProducts();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -489,8 +538,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
                 child: const Text(
-                  'Mua ngay',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  'Khám phá ngay',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
@@ -552,7 +601,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '\$${product.price.toStringAsFixed(2)}',
+                formatVnd(product.price),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -561,59 +610,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNewCollectionBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 168,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/carousel_2.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [
-              Colors.black.withValues(alpha: 0.6),
-              Colors.black.withValues(alpha: 0.1),
-            ],
-          ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'BỘ SƯU TẬP MỚI',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Xuống phố\n& Dự tiệc',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 25,
-                fontWeight: FontWeight.w700,
-                height: 1.2,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -672,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '\$${product.price.toStringAsFixed(2)}',
+                formatVnd(product.price),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -749,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '\$${product.price.toStringAsFixed(2)}',
+                          formatVnd(product.price),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.95),
                             fontSize: 12,
@@ -787,8 +783,68 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> _buildTopCollectionPool(
     List<Product> source, {
     required List<Product> fallbackPool,
+    Set<String> excludedIds = const {},
   }) {
-    return _ensureMinItems(source, 4, fallbackPool: fallbackPool);
+    final byCategory = <String, List<Product>>{};
+    final merged = _takeWithFallback(
+      source,
+      fallbackPool,
+      minItems: 24,
+    ).where((item) => !excludedIds.contains(item.id)).toList();
+
+    for (final product in merged) {
+      final category = _resolveCategoryId(product);
+      byCategory.putIfAbsent(category, () => []).add(product);
+    }
+
+    final output = <Product>[];
+    for (final category in ['women', 'men', 'accessories', 'beauty']) {
+      final items = byCategory[category] ?? [];
+      if (items.isEmpty) continue;
+      items.sort((a, b) => b.price.compareTo(a.price));
+      output.add(items.first);
+      if (output.length >= 4) break;
+    }
+
+    return _takeWithFallback(output, merged, minItems: 4);
+  }
+
+  List<Product> _pickFeaturedProducts(
+    List<Product> source, {
+    required List<Product> fallbackPool,
+  }) {
+    final merged = _takeWithFallback(source, fallbackPool, minItems: 20);
+    merged.sort((a, b) => b.price.compareTo(a.price));
+    return _takeWithFallback(merged, fallbackPool, minItems: 6);
+  }
+
+  List<Product> _buildRecommendedPool(
+    List<Product> source, {
+    required List<Product> fallbackPool,
+    Set<String> excludedIds = const {},
+  }) {
+    final base = _takeWithFallback(
+      source,
+      fallbackPool,
+      minItems: 24,
+    ).where((item) => !excludedIds.contains(item.id)).toList();
+
+    if (base.isEmpty) {
+      return [];
+    }
+
+    final sortedPrice = base.map((item) => item.price).toList()..sort();
+    final midPrice = sortedPrice[(sortedPrice.length - 1) ~/ 2];
+
+    base.sort((a, b) {
+      final aDistance = (a.price - midPrice).abs();
+      final bDistance = (b.price - midPrice).abs();
+      final compareDistance = aDistance.compareTo(bDistance);
+      if (compareDistance != 0) return compareDistance;
+      return b.price.compareTo(a.price);
+    });
+
+    return base.take(6).toList();
   }
 
   List<Product> _filterByCategory(List<Product> products) {
@@ -836,6 +892,49 @@ class _HomeScreenState extends State<HomeScreen> {
     return output;
   }
 
+  List<Product> _takeWithFallback(
+    List<Product> source,
+    List<Product> fallbackPool, {
+    required int minItems,
+  }) {
+    return _ensureMinItems(source, minItems, fallbackPool: fallbackPool);
+  }
+
+  _HeroContent get _heroContent {
+    switch (_selectedCategoryId) {
+      case 'women':
+        return const _HeroContent(
+          imagePath: 'assets/images/carousel_1.jpg',
+          tagline: 'Thời trang nữ tinh tế',
+          title: 'Nâng tầm\nphong cách nữ tính',
+        );
+      case 'men':
+        return const _HeroContent(
+          imagePath: 'assets/images/carousel_2.jpg',
+          tagline: 'Phong cách nam hiện đại',
+          title: 'Lịch lãm\ntrong từng chi tiết',
+        );
+      case 'accessories':
+        return const _HeroContent(
+          imagePath: 'assets/images/carousel_3.jpg',
+          tagline: 'Phụ kiện tạo điểm nhấn',
+          title: 'Hoàn thiện\nset đồ của bạn',
+        );
+      case 'beauty':
+        return const _HeroContent(
+          imagePath: 'assets/images/carousel_2.jpg',
+          tagline: 'Chăm sóc cá nhân mỗi ngày',
+          title: 'Làn da khỏe\ntự tin tỏa sáng',
+        );
+      default:
+        return const _HeroContent(
+          imagePath: 'assets/images/carousel_1.jpg',
+          tagline: 'Lựa chọn theo mùa',
+          title: 'Làm mới\nphong cách mỗi ngày',
+        );
+    }
+  }
+
   String _resolveCategoryId(Product product) {
     final categoryRaw =
         '${product.categoryId ?? ''} ${product.categoryName ?? ''}'
@@ -843,20 +942,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (categoryRaw.contains('women') ||
         categoryRaw.contains('female') ||
-        categoryRaw.contains('lady')) {
+        categoryRaw.contains('lady') ||
+        categoryRaw.contains('nữ') ||
+        categoryRaw.contains('nu') ||
+        categoryRaw.contains('thời trang nữ')) {
       return 'women';
     }
 
     if (categoryRaw.contains('men') ||
         categoryRaw.contains('male') ||
-        categoryRaw.contains('man')) {
+        categoryRaw.contains('man') ||
+        categoryRaw.contains('nam') ||
+        categoryRaw.contains('thời trang nam')) {
       return 'men';
+    }
+
+    if (categoryRaw.contains('accessories') ||
+        categoryRaw.contains('accessory') ||
+        categoryRaw.contains('phụ kiện') ||
+        categoryRaw.contains('phu kien')) {
+      return 'accessories';
     }
 
     if (categoryRaw.contains('beauty') ||
         categoryRaw.contains('skin') ||
         categoryRaw.contains('care') ||
-        categoryRaw.contains('cosmetic')) {
+        categoryRaw.contains('cosmetic') ||
+        categoryRaw.contains('làm đẹp') ||
+        categoryRaw.contains('lam dep') ||
+        categoryRaw.contains('chăm sóc') ||
+        categoryRaw.contains('cham soc')) {
       return 'beauty';
     }
 
@@ -893,7 +1008,14 @@ class _HomeScreenState extends State<HomeScreen> {
         name.contains('skin') ||
         name.contains('care') ||
         name.contains('lam dep') ||
-        name.contains('làm đẹp')) {
+        name.contains('làm đẹp') ||
+        name.contains('serum') ||
+        name.contains('sữa rửa mặt') ||
+        name.contains('kem chống nắng') ||
+        name.contains('tẩy trang') ||
+        name.contains('son') ||
+        name.contains('chăm sóc') ||
+        name.contains('cham soc')) {
       return 'beauty';
     }
 
@@ -906,9 +1028,29 @@ class _HomeScreenState extends State<HomeScreen> {
     double? height,
     BoxFit fit = BoxFit.cover,
   }) {
+    final dataUriBytes = resolveDataUriImageBytes(source);
     final resolvedNetworkUrl = resolveNetworkImageUrl(source);
     final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
     final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+
+    if (dataUriBytes != null) {
+      return Image.memory(
+        dataUriBytes,
+        width: width,
+        height: height,
+        fit: fit,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 18),
+          );
+        },
+      );
+    }
 
     if (resolvedNetworkUrl != null) {
       return Image.network(
@@ -989,52 +1131,52 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> get _fallbackFeaturedProducts => [
     Product(
       id: 'f1',
-      name: 'Áo thanh lịch Victoria',
-      description: 'Mẫu áo cổ điển hiện đại để mặc hằng ngày',
-      price: 39.99,
+      name: 'Áo dài lụa trắng',
+      description: 'Thiết kế thanh lịch cho dịp lễ và sự kiện truyền thống',
+      price: 620000,
       imageUrl:
-          'https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=500&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'f2',
-      name: 'Đầm tay dài',
-      description: 'Thiết kế tối giản, tông màu nhẹ nhàng',
-      price: 45.00,
+      name: 'Váy hoa nhí mùa hè',
+      description: 'Chất voan mát nhẹ, phù hợp đi chơi cuối tuần',
+      price: 420000,
       imageUrl:
           'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'f3',
-      name: 'Áo khoác thu sành điệu',
-      description: 'Ấm áp và thanh lịch cho ngày se lạnh',
-      price: 80.00,
+      name: 'Áo sơ mi nam linen',
+      description: 'Thoáng mát, dễ phối đồ cho đi làm và đi cafe',
+      price: 360000,
       imageUrl:
-          'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?q=80&w=500&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'f4',
-      name: 'Áo hoodie cơ bản',
-      description: 'Chất liệu mềm mại cho tủ đồ hiện đại',
-      price: 42.50,
+      name: 'Đồng hồ dây da tối giản',
+      description: 'Mặt kính sapphire, phong cách lịch sự hiện đại',
+      price: 890000,
       imageUrl:
-          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=500&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=500&auto=format&fit=crop',
     ),
   ];
 
   List<Product> get _fallbackAllProducts => [
     Product(
       id: 'a1',
-      name: 'Hoodie trắng thời trang',
-      description: 'Phong cách tối giản, thoải mái cả ngày',
-      price: 29.00,
+      name: 'Áo hoodie nỉ xám',
+      description: 'Giữ ấm tốt, form unisex năng động',
+      price: 450000,
       imageUrl:
           'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a2',
       name: 'Áo sơ mi cotton cao cấp',
-      description: 'Chất cotton cao cấp với phom dáng hiện đại',
-      price: 30.00,
+      description: 'Vải cotton dày dặn, đường may chắc chắn',
+      price: 390000,
       imageUrl:
           'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500&auto=format&fit=crop',
     ),
@@ -1042,23 +1184,23 @@ class _HomeScreenState extends State<HomeScreen> {
       id: 'a3',
       name: 'Túi da thanh lịch',
       description: 'Túi da chế tác tỉ mỉ cho phong cách thành thị',
-      price: 69.00,
+      price: 760000,
       imageUrl:
           'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a4',
-      name: 'Bộ chăm sóc da tự nhiên',
-      description: 'Sản phẩm cần thiết cho quy trình chăm sóc da',
-      price: 34.00,
+      name: 'Serum dưỡng ẩm HA',
+      description: 'Cấp ẩm sâu, phù hợp da thiếu nước',
+      price: 320000,
       imageUrl:
-          'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=500&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=500&auto=format&fit=crop',
     ),
     Product(
       id: 'a5',
       name: 'Đầm nữ cổ điển',
       description: 'Chất vải mềm với dáng váy thanh lịch',
-      price: 54.00,
+      price: 540000,
       imageUrl:
           'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=500&auto=format&fit=crop',
     ),
@@ -1066,7 +1208,7 @@ class _HomeScreenState extends State<HomeScreen> {
       id: 'a6',
       name: 'Áo sơ mi nam hằng ngày',
       description: 'Tinh tế cho công sở và đi cà phê',
-      price: 37.00,
+      price: 340000,
       imageUrl:
           'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=500&auto=format&fit=crop',
     ),
@@ -1091,5 +1233,17 @@ class _HomeCategory {
     required this.title,
     required this.icon,
     required this.backgroundColor,
+  });
+}
+
+class _HeroContent {
+  final String imagePath;
+  final String tagline;
+  final String title;
+
+  const _HeroContent({
+    required this.imagePath,
+    required this.tagline,
+    required this.title,
   });
 }

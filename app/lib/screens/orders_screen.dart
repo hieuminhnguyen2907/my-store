@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/order_service.dart';
+import '../utils/currency_formatter.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -84,7 +85,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         const SizedBox(height: 8),
                         Text('Sản phẩm: ${order.totalQuantity}'),
                         const SizedBox(height: 4),
-                        Text('Tổng: \$${order.total.toStringAsFixed(2)}'),
+                        Text('Tổng: ${formatVnd(order.total)}'),
                         if ((order.shippingAddress ?? '').isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text('Giao đến: ${order.shippingAddress}'),

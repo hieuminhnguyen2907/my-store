@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/wishlist_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/image_resolver.dart';
 
 class ProductCard extends StatefulWidget {
@@ -120,7 +121,7 @@ class _ProductCardState extends State<ProductCard> {
 
           // Price
           Text(
-            '\$${widget.product.price.toStringAsFixed(2)}',
+            formatVnd(widget.product.price),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
@@ -129,9 +130,26 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildAdaptiveImage(String source) {
+    final dataUriBytes = resolveDataUriImageBytes(source);
     final resolvedNetworkUrl = resolveNetworkImageUrl(source);
     final fallbackAssetPath = resolveBundledFallbackAssetPath(source);
     final fallbackLegacyUrl = resolveLegacySeedImageUrl(source);
+
+    if (dataUriBytes != null) {
+      return Image.memory(
+        dataUriBytes,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: const Icon(Icons.image_not_supported_outlined, size: 18),
+          );
+        },
+      );
+    }
+
     if (resolvedNetworkUrl != null) {
       return Image.network(
         resolvedNetworkUrl,

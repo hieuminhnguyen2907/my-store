@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
+import '../utils/currency_formatter.dart';
 import '../utils/storage_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return total;
   }
 
-  double get _shipping => _cartItems.isEmpty ? 0 : 4.99;
+  double get _shipping => _cartItems.isEmpty ? 0 : 30000;
 
   double get _total => _subtotal + _shipping;
 
@@ -223,7 +224,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           title: Text(item.product.name),
                           subtitle: Text('Số lượng: ${item.quantity}'),
                           trailing: Text(
-                            '\$${item.subtotal.toStringAsFixed(2)}',
+                            formatVnd(item.subtotal),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -291,7 +292,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         Text(
-          '\$${value.toStringAsFixed(2)}',
+          formatVnd(value),
           style: TextStyle(
             fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
             fontSize: emphasize ? 16 : 14,

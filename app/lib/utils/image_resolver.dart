@@ -1,11 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'api_constants.dart';
 
-const Map<String, String> _bundledProductFallbackByFileName = {
-  'women_dress.jpg': 'assets/images/products/women_dress.jpg',
-  'women_blouse.jpg': 'assets/images/products/women_blouse.jpg',
-  'men_oxford_shirt.jpg': 'assets/images/products/men_oxford_shirt.jpg',
-  'men_street_hoodie.jpg': 'assets/images/products/men_street_hoodie.jpg',
-};
 const String _defaultCatalogFallbackAsset = 'assets/images/carousel_1.jpg';
 
 Uri? _resolveApiOrigin() {
@@ -27,11 +24,11 @@ String? resolveAssetImagePath(String source) {
     return null;
   }
 
-  if (value.startsWith('/assets/images/products/')) {
+  if (value.startsWith('/assets/images/')) {
     return value.substring(1);
   }
 
-  if (value.startsWith('assets/images/products/')) {
+  if (value.startsWith('assets/images/')) {
     return value;
   }
 
@@ -46,15 +43,10 @@ String? resolveBundledFallbackAssetPath(String source) {
 
   final directAssetPath = resolveAssetImagePath(value);
   if (directAssetPath != null) {
-    return directAssetPath;
-  }
-
-  final fileName = _extractImageFileName(value);
-  if (fileName != null) {
-    final mapped = _bundledProductFallbackByFileName[fileName];
-    if (mapped != null) {
-      return mapped;
+    if (directAssetPath.startsWith('assets/images/products/')) {
+      return _defaultCatalogFallbackAsset;
     }
+    return directAssetPath;
   }
 
   final normalized = value.replaceAll('\\\\', '/').toLowerCase();
@@ -85,13 +77,21 @@ String? _extractImageFileName(String source) {
 }
 
 String? resolveLegacySeedImageUrl(String source) {
-  final assetPath = resolveAssetImagePath(source);
-  if (assetPath == null) {
+  final normalized = source.trim().replaceAll('\\\\', '/');
+  if (normalized.isEmpty) {
     return null;
   }
 
-  final fileName = assetPath.split('/').last;
-  if (fileName.isEmpty) {
+  final hasLegacyProductPath =
+      normalized.contains('/images/products/') ||
+      normalized.contains('images/products/') ||
+      normalized.contains('assets/images/products/');
+  if (!hasLegacyProductPath) {
+    return null;
+  }
+
+  final fileName = _extractImageFileName(normalized);
+  if (fileName == null || fileName.isEmpty) {
     return null;
   }
 
@@ -106,6 +106,10 @@ String? resolveLegacySeedImageUrl(String source) {
 String? resolveNetworkImageUrl(String source) {
   final value = source.trim().replaceAll('\\\\', '/');
   if (value.isEmpty) {
+    return null;
+  }
+
+  if (value.startsWith('data:image/')) {
     return null;
   }
 
@@ -133,4 +137,32 @@ String? resolveNetworkImageUrl(String source) {
   }
 
   return null;
+}
+
+Uint8List? resolveDataUriImageBytes(String source) {
+  final value = source.trim();
+  if (!value.startsWith('data:image/')) {
+    return null;
+  }
+
+  final separatorIndex = value.indexOf(',');
+  if (separatorIndex < 0) {
+    return null;
+  }
+
+  final metadata = value.substring(0, separatorIndex).toLowerCase();
+  if (!metadata.contains(';base64')) {
+    return null;
+  }
+
+  final payload = value.substring(separatorIndex + 1).trim();
+  if (payload.isEmpty) {
+    return null;
+  }
+
+  try {
+    return base64Decode(payload);
+  } catch (_) {
+    return null;
+  }
 }
