@@ -13,10 +13,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Welcome to GemStore!'), findsOneWidget);
-    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Chào mừng đến với GemStore!'), findsOneWidget);
+    expect(find.text('Bắt đầu'), findsOneWidget);
 
-    await tester.tap(find.text('Get Started'));
+    await tester.tap(find.text('Bắt đầu'));
     await tester.pumpAndSettle();
 
     expect(find.text('Login Screen'), findsOneWidget);

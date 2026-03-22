@@ -59,8 +59,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
 
     if (showSuccessMessage && !popOnDone) {
       final message = syncError == null
-          ? 'Addresses saved successfully'
-          : 'Saved locally. Server sync failed: $syncError';
+          ? 'Lưu địa chỉ thành công'
+          : 'Đã lưu trên máy. Đồng bộ lên server thất bại: $syncError';
       _showMessage(
         message,
         backgroundColor: syncError == null ? null : Colors.orange,
@@ -120,7 +120,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _AddressFormScreen(
-          title: index == null ? 'Add Address' : 'Edit Address',
+          title: index == null ? 'Thêm địa chỉ' : 'Chỉnh sửa địa chỉ',
           initial: initial,
         ),
       ),
@@ -153,7 +153,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Addresses'),
+        title: const Text('Địa chỉ'),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveAddresses,
@@ -163,7 +163,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     width: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : const Text('Lưu'),
           ),
         ],
       ),
@@ -174,10 +174,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _addresses.isEmpty
-          ? const Center(child: Text('No addresses yet'))
+          ? const Center(child: Text('Chưa có địa chỉ nào'))
           : ListView.separated(
               itemCount: _addresses.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final item = _addresses[index];
                 final isDefault = item['isDefault'] == true;
@@ -201,8 +201,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
                       _persistAddresses();
                     },
                     itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      PopupMenuItem(value: 'edit', child: Text('Chỉnh sửa')),
+                      PopupMenuItem(value: 'delete', child: Text('Xóa')),
                     ],
                   ),
                   leading: Icon(
@@ -247,7 +247,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
       text: widget.initial?['city']?.toString() ?? '',
     );
     _countryController = TextEditingController(
-      text: widget.initial?['country']?.toString() ?? 'Vietnam',
+      text: widget.initial?['country']?.toString() ?? 'Việt Nam',
     );
     _phoneController = TextEditingController(
       text: widget.initial?['phoneNumber']?.toString() ?? '',
@@ -283,7 +283,9 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Please fill required fields')),
+          const SnackBar(
+            content: Text('Vui lòng điền đầy đủ thông tin bắt buộc'),
+          ),
         );
       return;
     }
@@ -303,7 +305,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
               TextField(
                 controller: _fullnameController,
                 decoration: const InputDecoration(
-                  labelText: 'Full Name',
+                  labelText: 'Họ và tên',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -311,7 +313,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
               TextField(
                 controller: _addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Address',
+                  labelText: 'Địa chỉ',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -319,7 +321,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
               TextField(
                 controller: _cityController,
                 decoration: const InputDecoration(
-                  labelText: 'City',
+                  labelText: 'Thành phố',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -327,7 +329,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
               TextField(
                 controller: _countryController,
                 decoration: const InputDecoration(
-                  labelText: 'Country',
+                  labelText: 'Quốc gia',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -336,13 +338,13 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Phone Number',
+                  labelText: 'Số điện thoại',
                   border: OutlineInputBorder(),
                 ),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Set as default address'),
+                title: const Text('Đặt làm địa chỉ mặc định'),
                 value: _isDefault,
                 onChanged: (value) {
                   setState(() => _isDefault = value);
@@ -357,7 +359,7 @@ class _AddressFormScreenState extends State<_AddressFormScreen> {
                     backgroundColor: Colors.black,
                   ),
                   child: const Text(
-                    'Save',
+                    'Lưu',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),

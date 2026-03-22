@@ -20,7 +20,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Cart cleared')));
+    ).showSnackBar(const SnackBar(content: Text('Đã xóa giỏ hàng')));
   }
 
   Future<void> _clearWishlist() async {
@@ -28,7 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Wishlist cleared')));
+    ).showSnackBar(const SnackBar(content: Text('Đã xóa danh sách yêu thích')));
   }
 
   Future<void> _clearOrders() async {
@@ -36,24 +36,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Order history cleared')));
+    ).showSnackBar(const SnackBar(content: Text('Đã xóa lịch sử đơn hàng')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Cài đặt')),
       body: ListView(
         children: [
           SwitchListTile(
-            title: const Text('Order notifications'),
+            title: const Text('Thông báo đơn hàng'),
             value: _orderNotifications,
             onChanged: (value) {
               setState(() => _orderNotifications = value);
             },
           ),
           SwitchListTile(
-            title: const Text('Marketing notifications'),
+            title: const Text('Thông báo khuyến mãi'),
             value: _marketingNotifications,
             onChanged: (value) {
               setState(() => _marketingNotifications = value);
@@ -62,17 +62,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.remove_shopping_cart_outlined),
-            title: const Text('Clear cart'),
+            title: const Text('Xóa giỏ hàng'),
             onTap: _clearCart,
           ),
           ListTile(
             leading: const Icon(Icons.favorite_border),
-            title: const Text('Clear wishlist'),
+            title: const Text('Xóa danh sách yêu thích'),
             onTap: _clearWishlist,
           ),
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
-            title: const Text('Clear order history'),
+            title: const Text('Xóa lịch sử đơn hàng'),
             onTap: _clearOrders,
           ),
         ],

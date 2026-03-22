@@ -113,11 +113,11 @@ class _CartScreenState extends State<CartScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Cart ($_totalQuantity)',
+            'Giỏ hàng ($_totalQuantity)',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           if (_cartItems.isNotEmpty)
-            TextButton(onPressed: _clearCart, child: const Text('Clear all')),
+            TextButton(onPressed: _clearCart, child: const Text('Xóa tất cả')),
         ],
       ),
     );
@@ -140,7 +140,7 @@ class _CartScreenState extends State<CartScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Your cart is empty',
+              'Giỏ hàng của bạn đang trống',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 12),
@@ -152,7 +152,7 @@ class _CartScreenState extends State<CartScreen> {
                   (route) => false,
                 );
               },
-              child: const Text('Continue shopping'),
+              child: const Text('Tiếp tục mua sắm'),
             ),
           ],
         ),
@@ -234,7 +234,7 @@ class _CartScreenState extends State<CartScreen> {
                     const Spacer(),
                     TextButton(
                       onPressed: () => _removeItem(item),
-                      child: const Text('Remove'),
+                      child: const Text('Xóa'),
                     ),
                   ],
                 ),
@@ -271,11 +271,11 @@ class _CartScreenState extends State<CartScreen> {
       ),
       child: Column(
         children: [
-          _summaryRow('Subtotal', _subtotal),
+          _summaryRow('Tạm tính', _subtotal),
           const SizedBox(height: 6),
-          _summaryRow('Shipping', _shipping),
+          _summaryRow('Phí vận chuyển', _shipping),
           const SizedBox(height: 8),
-          _summaryRow('Total', _grandTotal, emphasize: true),
+          _summaryRow('Tổng cộng', _grandTotal, emphasize: true),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
@@ -291,7 +291,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               child: const Text(
-                'Proceed to Checkout',
+                'Tiến hành thanh toán',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

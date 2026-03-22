@@ -104,7 +104,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '(${widget.product.reviewCount} reviews)',
+                          '(${widget.product.reviewCount} đánh giá)',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -124,7 +124,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // Description
                   Text(
-                    'Description',
+                    'Mô tả',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -142,7 +142,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   // Quantity Selector
                   Row(
                     children: [
-                      const Text('Quantity:'),
+                      const Text('Số lượng:'),
                       const SizedBox(width: 16),
                       Container(
                         decoration: BoxDecoration(
@@ -196,10 +196,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Added $_quantity ${widget.product.name} to cart',
+                              'Đã thêm $_quantity ${widget.product.name} vào giỏ hàng',
                             ),
                             action: SnackBarAction(
-                              label: 'View Cart',
+                              label: 'Xem giỏ hàng',
                               onPressed: () {
                                 Navigator.pushNamed(context, '/cart');
                               },
@@ -215,7 +215,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       child: const Text(
-                        'Add to Cart',
+                        'Thêm vào giỏ hàng',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

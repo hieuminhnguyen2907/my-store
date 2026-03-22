@@ -49,7 +49,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Orders')),
+      appBar: AppBar(title: const Text('Đơn hàng của tôi')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _orders.isEmpty
@@ -57,7 +57,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: _orders.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final order = _orders[index];
                 return Card(
@@ -82,12 +82,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text('Items: ${order.totalQuantity}'),
+                        Text('Sản phẩm: ${order.totalQuantity}'),
                         const SizedBox(height: 4),
-                        Text('Total: \$${order.total.toStringAsFixed(2)}'),
+                        Text('Tổng: \$${order.total.toStringAsFixed(2)}'),
                         if ((order.shippingAddress ?? '').isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text('Ship to: ${order.shippingAddress}'),
+                          Text('Giao đến: ${order.shippingAddress}'),
                         ],
                       ],
                     ),
@@ -113,12 +113,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ),
             const SizedBox(height: 14),
             const Text(
-              'No orders yet',
+              'Chưa có đơn hàng nào',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
-              'Start shopping to place your first order.',
+              'Bắt đầu mua sắm để tạo đơn hàng đầu tiên.',
               style: TextStyle(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
@@ -127,7 +127,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
               onPressed: _goToHome,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
               child: const Text(
-                'Continue Shopping',
+                'Tiếp tục mua sắm',
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -151,7 +151,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _goToAccount,
-                child: const Text('Back to Account'),
+                child: const Text('Quay lại tài khoản'),
               ),
             ),
             const SizedBox(width: 10),
@@ -160,7 +160,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 onPressed: _goToHome,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                 child: const Text(
-                  'Continue Shopping',
+                  'Tiếp tục mua sắm',
                   style: TextStyle(color: Colors.white),
                 ),
               ),

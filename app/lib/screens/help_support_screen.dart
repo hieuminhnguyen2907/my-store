@@ -6,24 +6,24 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Help & Support')),
+      appBar: AppBar(title: const Text('Trợ giúp & Hỗ trợ')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
           _SupportCard(
-            title: 'Customer Care',
-            content: 'Email: support@bigcart.local\nPhone: +84 1900 0000',
+            title: 'Chăm sóc khách hàng',
+            content: 'Email: support@bigcart.local\nĐiện thoại: +84 1900 0000',
           ),
           SizedBox(height: 12),
           _SupportCard(
-            title: 'Business Hours',
-            content: 'Monday - Saturday\n08:00 - 21:00',
+            title: 'Giờ làm việc',
+            content: 'Thứ Hai - Thứ Bảy\n08:00 - 21:00',
           ),
           SizedBox(height: 12),
           _SupportCard(
-            title: 'FAQ',
+            title: 'Câu hỏi thường gặp',
             content:
-                '- Where is my order? Check My Orders in Account.\n- How to change address? Go to Account > Addresses.\n- Refund policy: 7 days for unused items.',
+                '- Đơn hàng của tôi đang ở đâu? Vào Đơn hàng của tôi trong Tài khoản.\n- Thay đổi địa chỉ như thế nào? Vào Tài khoản > Địa chỉ.\n- Chính sách hoàn tiền: 7 ngày cho sản phẩm chưa sử dụng.',
           ),
         ],
       ),

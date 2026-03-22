@@ -118,7 +118,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         textInputAction: TextInputAction.search,
                         onSubmitted: _performSearch,
                         decoration: InputDecoration(
-                          hintText: 'Search products...',
+                          hintText: 'Tìm kiếm sản phẩm...',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -161,7 +161,7 @@ class _SearchScreenState extends State<SearchScreen> {
         padding: const EdgeInsets.only(top: 24),
         child: Center(
           child: Text(
-            'Search for products',
+            'Tìm kiếm sản phẩm',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),
@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
         padding: const EdgeInsets.only(top: 24),
         child: Center(
           child: Text(
-            'No products found',
+            'Không tìm thấy sản phẩm',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),

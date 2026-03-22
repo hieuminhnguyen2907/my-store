@@ -40,7 +40,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         centerTitle: true,
         title: const Text(
-          'Create Account',
+          'Tạo tài khoản',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -55,14 +55,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             const SizedBox(height: 20),
             Text(
-              'Create Account',
+              'Tạo tài khoản',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Sign up to start shopping',
+              'Đăng ký để bắt đầu mua sắm',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -71,7 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Full Name Field
             Text(
-              'Full Name',
+              'Họ và tên',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -81,7 +81,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _nameController,
               keyboardType: TextInputType.name,
               decoration: InputDecoration(
-                hintText: 'Enter your full name',
+                hintText: 'Nhập họ và tên',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -114,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: 'Enter your email',
+                hintText: 'Nhập email của bạn',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -137,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Password Field
             Text(
-              'Password',
+              'Mật khẩu',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -147,7 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                hintText: 'Enter your password',
+                hintText: 'Nhập mật khẩu',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -181,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Confirm Password Field
             Text(
-              'Confirm Password',
+              'Xác nhận mật khẩu',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -191,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
               decoration: InputDecoration(
-                hintText: 'Confirm your password',
+                hintText: 'Nhập lại mật khẩu',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -239,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 Expanded(
                   child: Text(
-                    'I agree to Terms & Conditions',
+                    'Tôi đồng ý với Điều khoản & Điều kiện',
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                   ),
                 ),
@@ -260,21 +260,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             _confirmPasswordController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please fill all fields'),
+                              content: Text('Vui lòng điền đầy đủ thông tin'),
                             ),
                           );
                         } else if (_passwordController.text !=
                             _confirmPasswordController.text) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Passwords do not match'),
+                              content: Text('Mật khẩu xác nhận không khớp'),
                             ),
                           );
                         } else if (!_agreedToTerms) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Please agree to Terms & Conditions',
+                                'Vui lòng đồng ý với Điều khoản & Điều kiện',
                               ),
                             ),
                           );
@@ -291,7 +291,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Account created successfully!'),
+                                content: Text('Tạo tài khoản thành công!'),
                               ),
                             );
 
@@ -334,7 +334,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       )
                     : const Text(
-                        'Create Account',
+                        'Tạo tài khoản',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -350,7 +350,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Already have an account? ',
+                  'Bạn đã có tài khoản? ',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
                 GestureDetector(
@@ -362,7 +362,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                   child: const Text(
-                    'Sign In',
+                    'Đăng nhập',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 14,

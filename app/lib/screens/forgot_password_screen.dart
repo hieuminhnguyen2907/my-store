@@ -31,9 +31,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (email.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin')),
+      );
       return;
     }
 
@@ -50,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password reset successful. Please sign in.'),
+          content: Text('Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.'),
         ),
       );
       Navigator.pop(context);
@@ -69,21 +69,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(title: const Text('Quên mật khẩu')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Reset your password',
+              'Đặt lại mật khẩu',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Enter your account email and your new password.',
+              'Nhập email tài khoản và mật khẩu mới của bạn.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -102,7 +102,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               controller: _newPasswordController,
               obscureText: _obscureNewPassword,
               decoration: InputDecoration(
-                labelText: 'New Password',
+                labelText: 'Mật khẩu mới',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -121,7 +121,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
               decoration: InputDecoration(
-                labelText: 'Confirm Password',
+                labelText: 'Xác nhận mật khẩu',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -158,7 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                       )
                     : const Text(
-                        'Reset Password',
+                        'Đặt lại mật khẩu',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

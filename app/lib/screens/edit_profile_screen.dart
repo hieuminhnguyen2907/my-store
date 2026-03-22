@@ -42,7 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Name is required')));
+      ).showSnackBar(const SnackBar(content: Text('Tên không được để trống')));
       return;
     }
 
@@ -73,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        const SnackBar(content: Text('Cập nhật hồ sơ thành công')),
       );
       Navigator.pop(context, true);
     } catch (e) {
@@ -99,7 +99,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(title: const Text('Chỉnh sửa hồ sơ')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -109,7 +109,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Name',
+                      labelText: 'Tên',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -127,7 +127,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
-                      labelText: 'Phone',
+                      labelText: 'Số điện thoại',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -152,7 +152,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ),
                             )
                           : const Text(
-                              'Save Changes',
+                              'Lưu thay đổi',
                               style: TextStyle(color: Colors.white),
                             ),
                     ),

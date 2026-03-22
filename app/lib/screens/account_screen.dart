@@ -18,7 +18,7 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  String userName = 'User';
+  String userName = 'Người dùng';
   String? userEmail = '';
   int _selectedBottomNavIndex = 3;
 
@@ -36,7 +36,7 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() {
       userName = userData?['name']?.toString().trim().isNotEmpty == true
           ? userData!['name'].toString().trim()
-          : 'User';
+          : 'Người dùng';
       userEmail = email;
     });
   }
@@ -66,12 +66,12 @@ class _AccountScreenState extends State<AccountScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: const Text('Đăng xuất'),
+          content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Hủy'),
             ),
             TextButton(
               onPressed: () async {
@@ -85,7 +85,10 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 );
               },
-              child: const Text('Logout', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'Đăng xuất',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -142,7 +145,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     // Account Menu
                     _buildMenuTile(
                       icon: Icons.person_outline,
-                      title: 'Edit Profile',
+                      title: 'Chỉnh sửa hồ sơ',
                       onTap: () async {
                         final updated = await Navigator.push(
                           context,
@@ -158,7 +161,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     _buildMenuTile(
                       icon: Icons.location_on_outlined,
-                      title: 'Addresses',
+                      title: 'Địa chỉ',
                       onTap: () async {
                         final updated = await Navigator.push(
                           context,
@@ -174,7 +177,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     _buildMenuTile(
                       icon: Icons.favorite_outline,
-                      title: 'Wishlist',
+                      title: 'Danh sách yêu thích',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -186,7 +189,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     _buildMenuTile(
                       icon: Icons.shopping_bag_outlined,
-                      title: 'My Orders',
+                      title: 'Đơn hàng của tôi',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -198,7 +201,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     _buildMenuTile(
                       icon: Icons.settings_outlined,
-                      title: 'Settings',
+                      title: 'Cài đặt',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -210,7 +213,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     _buildMenuTile(
                       icon: Icons.help_outline,
-                      title: 'Help & Support',
+                      title: 'Trợ giúp & Hỗ trợ',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -235,7 +238,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Logout',
+                          'Đăng xuất',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,

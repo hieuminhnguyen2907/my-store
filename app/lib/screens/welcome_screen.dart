@@ -24,7 +24,7 @@ class WelcomeScreen extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Text(
-                    'welcome',
+                    'chào mừng',
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 14,
@@ -39,7 +39,7 @@ class WelcomeScreen extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    'Welcome to GemStore!',
+                    'Chào mừng đến với GemStore!',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
@@ -50,7 +50,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'The home for a fashionista',
+                    'Điểm đến dành cho tín đồ thời trang',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey[300],
@@ -84,7 +84,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Get Started',
+                    'Bắt đầu',
                     style: TextStyle(
                       color: Colors.black87,
                       fontSize: 16,

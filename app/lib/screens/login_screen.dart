@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         centerTitle: true,
         title: const Text(
-          'Sign In',
+          'Đăng nhập',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -50,14 +50,14 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const SizedBox(height: 20),
             Text(
-              'Welcome Back',
+              'Chào mừng bạn quay lại',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Sign in to continue shopping',
+              'Đăng nhập để tiếp tục mua sắm',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: 'Enter your email',
+                hintText: 'Nhập email của bạn',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Password Field
             Text(
-              'Password',
+              'Mật khẩu',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                hintText: 'Enter your password',
+                hintText: 'Nhập mật khẩu',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -154,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 child: Text(
-                  'Forgot Password?',
+                  'Quên mật khẩu?',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
               ),
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _passwordController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please fill all fields'),
+                              content: Text('Vui lòng điền đầy đủ thông tin'),
                             ),
                           );
                         } else {
@@ -184,7 +184,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Login success')),
+                              const SnackBar(
+                                content: Text('Đăng nhập thành công'),
+                              ),
                             );
                             Navigator.pushNamedAndRemoveUntil(
                               context,
@@ -225,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                     : const Text(
-                        'Sign In',
+                        'Đăng nhập',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -241,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Don't have an account? ",
+                  'Bạn chưa có tài khoản? ',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
                 GestureDetector(
@@ -253,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text(
-                    'Sign Up',
+                    'Đăng ký',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 14,

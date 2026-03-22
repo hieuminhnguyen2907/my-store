@@ -73,16 +73,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _placeOrder() async {
     if (_cartItems.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Your cart is empty')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Giỏ hàng của bạn đang trống')),
+      );
       return;
     }
 
     if (_selectedAddressIndex < 0 ||
         _selectedAddressIndex >= _addresses.length) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a shipping address')),
+        const SnackBar(content: Text('Vui lòng chọn địa chỉ giao hàng')),
       );
       return;
     }
@@ -115,9 +115,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await CartService.clearCart();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order placed successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đặt hàng thành công')));
       Navigator.pushReplacementNamed(context, '/orders');
     } catch (e) {
       if (!mounted) return;
@@ -134,11 +134,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(title: const Text('Thanh toán')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _cartItems.isEmpty
-          ? const Center(child: Text('Your cart is empty'))
+          ? const Center(child: Text('Giỏ hàng của bạn đang trống'))
           : Column(
               children: [
                 Expanded(
@@ -146,7 +146,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       Text(
-                        'Shipping Address',
+                        'Địa chỉ giao hàng',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -156,7 +156,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'No address found. Please add a shipping address to continue.',
+                              'Không tìm thấy địa chỉ. Vui lòng thêm địa chỉ giao hàng để tiếp tục.',
                               style: TextStyle(color: Colors.red),
                             ),
                             const SizedBox(height: 10),
@@ -169,7 +169,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 await _loadCheckoutData();
                               },
                               icon: const Icon(Icons.add_location_alt_outlined),
-                              label: const Text('Add Address'),
+                              label: const Text('Thêm địa chỉ'),
                             ),
                           ],
                         )
@@ -177,22 +177,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ..._addresses.asMap().entries.map((entry) {
                           final index = entry.key;
                           final address = entry.value;
-                          return RadioListTile<int>(
-                            value: index,
-                            groupValue: _selectedAddressIndex,
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() => _selectedAddressIndex = value);
-                            },
-                            title: Text(address['fullname']?.toString() ?? '-'),
-                            subtitle: Text(
-                              '${address['address'] ?? ''}, ${address['city'] ?? ''}, ${address['country'] ?? ''}\n${address['phoneNumber'] ?? ''}',
+                          final isSelected = _selectedAddressIndex == index;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.black.withValues(alpha: 0.04)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.grey.shade300,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              onTap: () {
+                                setState(() => _selectedAddressIndex = index);
+                              },
+                              leading: Icon(
+                                isSelected
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_off,
+                                color: isSelected ? Colors.black : Colors.grey,
+                              ),
+                              title: Text(
+                                address['fullname']?.toString() ?? '-',
+                              ),
+                              subtitle: Text(
+                                '${address['address'] ?? ''}, ${address['city'] ?? ''}, ${address['country'] ?? ''}\n${address['phoneNumber'] ?? ''}',
+                              ),
                             ),
                           );
                         }),
                       const SizedBox(height: 16),
                       Text(
-                        'Order Summary',
+                        'Tóm tắt đơn hàng',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -201,7 +221,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         (item) => ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(item.product.name),
-                          subtitle: Text('Qty: ${item.quantity}'),
+                          subtitle: Text('Số lượng: ${item.quantity}'),
                           trailing: Text(
                             '\$${item.subtotal.toStringAsFixed(2)}',
                             style: const TextStyle(fontWeight: FontWeight.w600),
@@ -220,11 +240,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   child: Column(
                     children: [
-                      _summaryRow('Subtotal', _subtotal),
+                      _summaryRow('Tạm tính', _subtotal),
                       const SizedBox(height: 6),
-                      _summaryRow('Shipping', _shipping),
+                      _summaryRow('Phí vận chuyển', _shipping),
                       const SizedBox(height: 8),
-                      _summaryRow('Total', _total, emphasize: true),
+                      _summaryRow('Tổng cộng', _total, emphasize: true),
                       const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
@@ -246,7 +266,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Place Order',
+                                  'Đặt hàng',
                                   style: TextStyle(color: Colors.white),
                                 ),
                         ),

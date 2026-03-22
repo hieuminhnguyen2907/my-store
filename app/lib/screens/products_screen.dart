@@ -53,7 +53,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
-                'All Products',
+                'Tất cả sản phẩm',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
@@ -66,13 +66,13 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
                   }
 
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(child: Text('Lỗi: ${snapshot.error}'));
                   }
 
                   final products = snapshot.data ?? [];
 
                   if (products.isEmpty) {
-                    return const Center(child: Text('No products available'));
+                    return const Center(child: Text('Không có sản phẩm'));
                   }
 
                   return Padding(

@@ -39,14 +39,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wishlist')),
+      appBar: AppBar(title: const Text('Danh sách yêu thích')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-          ? const Center(child: Text('Your wishlist is empty'))
+          ? const Center(child: Text('Danh sách yêu thích đang trống'))
           : ListView.separated(
               itemCount: _items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final item = _items[index];
                 return ListTile(

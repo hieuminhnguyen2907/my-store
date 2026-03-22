@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> {
           if (args is! Product) {
             return MaterialPageRoute(
               builder: (context) => const Scaffold(
-                body: Center(child: Text('Invalid product payload')),
+                body: Center(child: Text('Dữ liệu sản phẩm không hợp lệ')),
               ),
             );
           }
